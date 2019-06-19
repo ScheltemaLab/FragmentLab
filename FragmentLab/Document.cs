@@ -61,413 +61,24 @@ namespace FragmentLab
 
 
 		#region rawfile access
-		public abstract class RawFile : IDisposable
-		{
-			#region IDisposable override
-			public void Dispose()
-			{
-				Close();
-			}
-			#endregion
-
-			#region interface
-			public abstract void Close();
-
-			public abstract int FirstSpectrumNumber();
-
-			public abstract int LastSpectrumNumber();
-
-			public abstract ScanHeader GetScanHeader(int scannumber);
-
-			public abstract PrecursorInfo GetPrecursorInfo(int scannumber);
-
-			public abstract Centroid[] GetSpectrum(int scannumber, out INoiseDistribution noise);
-
-			public abstract void GetSpectrum(int scannumber, out double[] mzs, out float[] intensities, out INoiseDistribution noise);
-
-			public abstract int GetScanNumber(int frameid, int ionmobilityindex);
-
-			public abstract Dictionary<string, string> GetMetadata(int scannumber);
-			#endregion
-		}
-
-		private class RawFileThermo : RawFile
-		{
-			public RawFileThermo(string filename)
-			{
-				m_pThermoRawFile = new HeckLibRawFileThermo.ThermoRawFile();
-				m_pThermoRawFile.Open(filename);
-				m_pThermoRawFile.SetCurrentController(HeckLibRawFileThermo.ThermoRawFile.CONTROLLER_MS, 1);
-
-				m_sFilename = Path.GetFileNameWithoutExtension(filename);
-			}
-
-			public override void Close()
-			{
-				m_pThermoRawFile.Close();
-			}
-
-			public override int FirstSpectrumNumber()
-			{
-				return m_pThermoRawFile.GetFirstSpectrumNumber();
-			}
-
-			public override int LastSpectrumNumber()
-			{
-				return m_pThermoRawFile.GetLastSpectrumNumber();
-			}
-
-			public override ScanHeader GetScanHeader(int scannumber)
-			{
-				HeckLibRawFileThermo.ThermoRawFile.FilterLine filter = m_pThermoRawFile.GetFilterForScanNum(scannumber);
-				float rt = (float)m_pThermoRawFile.GetRetentionTime(scannumber);
-				return new ScanHeader {
-					RawFile = m_sFilename,
-					MassAnalyzer = filter.Analyzer,
-					Polarity = filter.Polarity,
-					ScanMode = filter.Format,
-					ScanType = filter.ScanType,
-					ScanNumber = scannumber,
-					IonMobilityIndex = -1,
-					IonMobilityLength = -1,
-					RetentionTime = rt
-				};
-			}
-
-			public override PrecursorInfo GetPrecursorInfo(int scannumber)
-			{
-				HeckLibRawFileThermo.ThermoRawFile.FilterLine filter = m_pThermoRawFile.GetFilterForScanNum(scannumber);
-				HeckLibRawFileThermo.ThermoRawFile.PrecursorInfo precursor = m_pThermoRawFile.GetPrecursorScanInfoForScan(scannumber);
-
-				float rt = (float)m_pThermoRawFile.GetRetentionTime(scannumber);
-
-				if (filter.ScanType != Spectrum.ScanType.MSn)
-					return null;
-
-				return new PrecursorInfo {
-					ScanNumber					= scannumber,
-					RetentionTime				= rt,
-					RawFile						= m_sFilename,
-					Mz							= precursor.MonoIsotopicMass,
-					Charge						= (short)precursor.ChargeState,
-					MsOrder						= filter.MsOrder,
-					Fragmentation				= filter.Fragmentation,
-					FragmentationEnergy			= filter.FragmentationEnergy,
-					SourceInducedDissociation	= (float)filter.Sid,
-					// for later
-					IsolationMin				= -1,
-					IsolationMax				= -1,
-					Intensity					= -1,
-					IonMobilityIndex			= -1,
-					IonMobilityLength			= -1,
-					IsolationInterference		= -1,
-					SignalToNoise				= -1,
-					PrevPrecursors				= null
-				};
-			}
-
-			public override Centroid[] GetSpectrum(int scannumber, out INoiseDistribution noise)
-			{
-				// load the spectral data
-				double[] mzs;
-				float[] intensities;
-				m_pThermoRawFile.GetMassListFromScanNum(scannumber, false, out mzs, out intensities);
-
-				noise = m_pThermoRawFile.GetNoiseDistribution(scannumber);
-
-				HeckLibRawFileThermo.ThermoRawFile.FilterLine filter = m_pThermoRawFile.GetFilterForScanNum(scannumber);
-
-				Centroid[] centroids;
-				if (filter.Format == Spectrum.ScanModeType.Profile)
-				{
-					centroids = CentroidDetection.Process(mzs, intensities, noise, new CentroidDetection.Settings());
-				}
-				else
-				{
-					centroids = CentroidDetection.ConvertCentroids(mzs, intensities, Orbitrap.ToleranceForResolution(15000));
-					for (int i = 0; i < centroids.Length; ++i)
-						centroids[i].SignalToNoise = noise.GetSignalToNoise(centroids[i].Mz, centroids[i].Intensity);
-				}
-
-				return centroids;
-			}
-
-			public override void GetSpectrum(int scannumber, out double[] mzs, out float[] intensities, out INoiseDistribution noise)
-			{
-				m_pThermoRawFile.GetMassListFromScanNum(scannumber, false, out mzs, out intensities);
-				noise = m_pThermoRawFile.GetNoiseDistribution(scannumber);
-			}
-
-			public override int GetScanNumber(int frameid, int ionmobilityindex)
-			{
-				return frameid;
-			}
-
-			public override Dictionary<string, string> GetMetadata(int scannumber)
-			{
-				Dictionary<string, string> result = new Dictionary<string, string>();
-
-				Dictionary<string, string> statusLog = m_pThermoRawFile.GetStatusLogForScanNum(scannumber);
-				foreach (string key in statusLog.Keys)
-					result.Add("status | " + key, statusLog[key]);
-
-				Dictionary<string, string> trailerExtra = m_pThermoRawFile.GetTrailerExtraForScanNum(scannumber);
-				foreach (string key in trailerExtra.Keys)
-					result.Add("trailer | " + key, trailerExtra[key]);
-
-				return result;
-			}
-
-			private string m_sFilename;
-			private HeckLibRawFileThermo.ThermoRawFile m_pThermoRawFile;
-		}
-
-		private class RawFileBruker : RawFile
-		{
-			public RawFileBruker(string filename)
-			{
-				m_sFilename = Path.GetFileNameWithoutExtension(filename);
-				m_pBrukerRawFile = new HeckLibRawFileBruker.BrukerRawFile(filename);
-
-				// go through all the scans and construct the headers already
-				m_lFrameIds = new List<int>();
-				m_lPrecursorIds = new List<int>();
-				m_lScanHeaders = new List<ScanHeader>();
-				m_lPrecursorInfos = new List<PrecursorInfo>();
-				for (int frameid = m_pBrukerRawFile.GetFirstFrameId(); frameid < m_pBrukerRawFile.GetLastFrameId(); frameid++)
-				{
-					HeckLibRawFileBruker.BrukerRawFile.Frame frame = m_pBrukerRawFile.GetFrame(frameid);
-
-					// check what to add
-					if (frame.MsType == Spectrum.ScanType.Full)
-					{
-						int scannumber = m_lScanHeaders.Count;
-						
-						// construct the header(s)
-						ScanHeader header = new ScanHeader();
-						header.IonMobilityIndex							= 0;
-						header.IonMobilityLength						= 0;
-						header.ScanNumber								= scannumber/*frameid*/;
-						header.MassAnalyzer								= Spectrum.MassAnalyzer.TimeOfFlight;
-						header.Polarity									= frame.Polarity;
-						header.RawFile									= m_sFilename;
-						header.RetentionTime							= frame.Time;
-						header.ScanMode									= frame.ScanMode;
-						header.ScanType									= frame.MsType;
-						m_lScanHeaders.Add(header);
-
-						// add the empty precursor info to keep the scannumber count correct
-						m_lPrecursorInfos.Add(null);
-
-						// add the frame ids
-						m_lFrameIds.Add(frameid);
-						m_lPrecursorIds.Add(-1);
-
-						// add the translation
-						m_dFrameidimsidxToScanNumber.Add(new Tuple<int, int>(frameid, 0), scannumber);
-					}
-					else
-					{
-						HeckLibRawFileBruker.BrukerRawFile.PasefFrameMsMsInfo[] infos = m_pBrukerRawFile.GetPasefFrameMsMsInfosForFrame(frame.Id);
-						foreach (HeckLibRawFileBruker.BrukerRawFile.PasefFrameMsMsInfo info in infos)
-						{
-							int scannumber = m_lScanHeaders.Count;
-							HeckLibRawFileBruker.BrukerRawFile.PrecursorInfo precursor = m_pBrukerRawFile.GetPrecursor(info.PrecursorId);
-
-							// construct the header
-							ScanHeader header = new ScanHeader();
-							header.IonMobilityIndex						= info.ScanNumBegin;
-							header.IonMobilityLength					= info.ScanNumEnd - info.ScanNumBegin;
-							header.ScanNumber							= scannumber/*frameid*/;
-							header.MassAnalyzer							= Spectrum.MassAnalyzer.TimeOfFlight;
-							header.Polarity								= frame.Polarity;
-							header.RawFile								= m_sFilename;
-							header.RetentionTime						= frame.Time;
-							header.ScanMode								= frame.ScanMode;
-							header.ScanType								= frame.MsType;
-							m_lScanHeaders.Add(header);
-
-							// construct the precursor info
-							PrecursorInfo precursorinfo = new PrecursorInfo();
-							precursorinfo.IonMobilityIndex				= info.ScanNumBegin;
-							precursorinfo.IonMobilityLength				= info.ScanNumEnd - info.ScanNumBegin;
-							precursorinfo.ScanNumber					= scannumber/*frameid*/;
-							precursorinfo.Fragmentation					= Spectrum.FragmentationType.CID;
-							precursorinfo.FragmentationEnergy			= info.CollisionEnergy;
-							precursorinfo.MsOrder						= 2;
-							precursorinfo.Mz							= precursor.MonoIsotopicMz;
-							precursorinfo.Charge						= precursor.Charge;
-							precursorinfo.RawFile						= m_sFilename;
-							precursorinfo.RetentionTime					= frame.Time;
-							precursorinfo.Intensity						= precursor.Intensity;
-							precursorinfo.IsolationMin					= -1; // for later
-							precursorinfo.IsolationMax					= -1;
-							precursorinfo.IsolationInterference			= -1;
-							precursorinfo.SignalToNoise					= -1;
-							precursorinfo.PrevPrecursors				= null;
-							precursorinfo.SourceInducedDissociation		= -1;
-							precursorinfo.Mobility						= 1 / info.Mobility; // bruker tims reports 1/K0
-							precursorinfo.CollisionCrossSection			= double.NaN;
-							m_lPrecursorInfos.Add(precursorinfo);
-
-							// plug in collision cross section
-							if (precursorinfo.Charge > 0)
-							{
-								precursorinfo.CollisionCrossSection = CollisionCrossSectionDetection.CalculateFromTime(
-										precursorinfo.Mz, 
-										precursorinfo.Charge, 
-										1 / info.Mobility, 
-										CollisionCrossSectionDetection.brukerTims
-									);
-							}
-
-							// add the frame ids
-							m_lFrameIds.Add(frameid);
-							m_lPrecursorIds.Add(precursor.Id);
-
-							// add the translation
-							m_dFrameidimsidxToScanNumber.Add(new Tuple<int, int>(frameid, info.ScanNumBegin), scannumber);
-						}
-					}
-				}
-			}
-
-			public override void Close()
-			{
-				m_pBrukerRawFile.Dispose();
-			}
-
-			public override int FirstSpectrumNumber()
-			{
-				return 0;
-			}
-
-			public override int LastSpectrumNumber()
-			{
-				return m_lScanHeaders.Count - 1;
-			}
-
-			public override ScanHeader GetScanHeader(int scannumber)
-			{
-				return m_lScanHeaders[scannumber];
-			}
-
-			public override PrecursorInfo GetPrecursorInfo(int scannumber)
-			{
-				return m_lPrecursorInfos[scannumber];
-			}
-
-			public override Centroid[] GetSpectrum(int scannumber, out INoiseDistribution noise)
-			{
-				int frameid = m_lFrameIds[scannumber];
-
-				// get the spectrum
-				int precursorid = m_lPrecursorIds[scannumber];
-
-				HeckLibRawFileBruker.BrukerRawFile.PasefFrameMsMsInfo msmsinfo = m_pBrukerRawFile.GetPasefFrameMsMsInfosForFrameAndPrecursor(frameid, precursorid);
-
-				double[] mzs;
-				float[] intensities;
-				m_pBrukerRawFile.GetSpectrum(frameid/*scannumber*/, msmsinfo.ScanNumBegin, msmsinfo.ScanNumEnd, 30000, 50, 3000, out mzs, out intensities, out noise);
-
-				Centroid[] centroids = CentroidDetection.Process(mzs, intensities, noise, new CentroidDetection.Settings());
-
-				return centroids;
-			}
-
-			public override void GetSpectrum(int scannumber, out double[] mzs, out float[] intensities, out INoiseDistribution noise)
-			{
-				int frameid = m_lFrameIds[scannumber];
-				int precursorid = m_lPrecursorIds[scannumber];
-
-				HeckLibRawFileBruker.BrukerRawFile.PasefFrameMsMsInfo msmsinfo = m_pBrukerRawFile.GetPasefFrameMsMsInfosForFrameAndPrecursor(frameid, precursorid);
-
-				m_pBrukerRawFile.GetSpectrum(frameid/*scannumber*/, msmsinfo.ScanNumBegin, msmsinfo.ScanNumEnd, 30000, 50, 3000, out mzs, out intensities, out noise);
-			}
-
-			public override int GetScanNumber(int frameid, int ionmobilityindex)
-			{
-				//return m_dFrameidimsidxToScanNumber[new Tuple<int, int>(frameid, ionmobilityindex)];
-				return frameid;
-			}
-
-			public override Dictionary<string, string> GetMetadata(int scannumber)
-			{
-				Dictionary<string, string> metadata = new Dictionary<string, string>();
-
-				int frameid = m_lFrameIds[scannumber];
-				int precursorid = m_lPrecursorIds[scannumber];
-
-				HeckLibRawFileBruker.BrukerRawFile.Frame frame = m_pBrukerRawFile.GetFrame(frameid);
-				HeckLibRawFileBruker.BrukerRawFile.PasefFrameMsMsInfo msmsinfo = m_pBrukerRawFile.GetPasefFrameMsMsInfosForFrameAndPrecursor(frameid, precursorid);
-				if (msmsinfo == null)
-					msmsinfo = new HeckLibRawFileBruker.BrukerRawFile.PasefFrameMsMsInfo();
-
-				double ccs = 0;
-				if (precursorid != -1)
-				{
-					HeckLibRawFileBruker.BrukerRawFile.PrecursorInfo precursorinfo = m_pBrukerRawFile.GetPrecursor(precursorid);
-					ccs = CollisionCrossSectionDetection.CalculateFromTime(precursorinfo.MonoIsotopicMz, precursorinfo.Charge, msmsinfo.Mobility, CollisionCrossSectionDetection.brukerTims);
-				}
-
-				metadata["frame | AccumulationTime"]		= frame.AccumulationTime.ToString();
-				metadata["frame | MaxIntensity"]			= frame.MaxIntensity.ToString();
-				metadata["frame | MinMz"]					= frame.MinMz.ToString();
-				metadata["frame | MaxMz"]					= frame.MaxMz.ToString();
-				metadata["frame | MsType"]					= frame.MsType.ToString();
-				metadata["frame | MzCalibration"]			= frame.MzCalibration.ToString();
-				metadata["frame | NumPeaks"]				= frame.NumPeaks.ToString();
-				metadata["frame | NumScans"]				= frame.NumScans.ToString();
-				metadata["frame | Polarity"]				= frame.Polarity.ToString();
-				metadata["frame | RampTime"]				= frame.RampTime.ToString();
-				metadata["frame | Resolution"]				= frame.Resolution.ToString();
-				metadata["frame | ScanMode"]				= frame.ScanMode.ToString();
-				metadata["frame | SummedIntensities"]		= frame.SummedIntensities.ToString();
-				metadata["frame | T1"]						= frame.T1.ToString();
-				metadata["frame | T2"]						= frame.T2.ToString();
-				metadata["frame | Time"]					= frame.Time.ToString();
-				metadata["frame | TimsCalibration"]			= frame.TimsCalibration.ToString();
-				metadata["frame | TimsId"]					= frame.TimsId.ToString();
-
-				metadata["msmsinfo | CollisionEnergy"]		= msmsinfo.CollisionEnergy.ToString();
-				metadata["msmsinfo | IsolationMz"]			= msmsinfo.IsolationMz.ToString();
-				metadata["msmsinfo | IsolationWidth"]		= msmsinfo.IsolationWidth.ToString();
-				metadata["msmsinfo | PrecursorId"]			= msmsinfo.PrecursorId.ToString();
-				metadata["msmsinfo | ScanNumBegin"]			= msmsinfo.ScanNumBegin.ToString();
-				metadata["msmsinfo | ScanNumEnd"]			= msmsinfo.ScanNumEnd.ToString();
-
-				metadata["homegrown | CCS"]					= ccs.ToString();
-
-				return metadata;
-			}
-
-			Dictionary<Tuple<int, int>, int> m_dFrameidimsidxToScanNumber = new Dictionary<Tuple<int, int>, int>();
-			private string m_sFilename;
-			private List<int> m_lFrameIds;
-			private List<int> m_lPrecursorIds;
-			private List<ScanHeader> m_lScanHeaders;
-			private List<PrecursorInfo> m_lPrecursorInfos;
-			private HeckLibRawFileBruker.BrukerRawFile m_pBrukerRawFile;
-		}
-
-		private RawFile OpenFile(string filename, out string path)
+		private HeckLibRawFiles.HeckLibRawFile OpenFile(string filename, out string path)
 		{
 			string extension = Path.GetExtension(filename).ToLower();
 
 			if (extension == ".raw")
 			{
 				path = Path.GetDirectoryName(filename);
-				return new RawFileThermo(filename);
+				return new HeckLibRawFileThermo.HeckLibThermoRawFile(filename);
 			}
 			else if (extension == ".d")
 			{
 				path = Directory.GetParent(filename).FullName;
-				return new RawFileBruker(filename);
+				return new HeckLibRawFileBruker.HeckLibBrukerRawFile(filename);
 			}
 			else if (extension == ".tdf")
 			{
 				path = Directory.GetParent(Path.GetDirectoryName(filename)).FullName;
-				return new RawFileBruker(Path.GetDirectoryName(filename));
+				return new HeckLibRawFileBruker.HeckLibBrukerRawFile(Path.GetDirectoryName(filename));
 			}
 			else
 				throw new Exception("unknown extension '" + extension + "'.");
@@ -533,7 +144,7 @@ namespace FragmentLab
 					foreach (string filename in filenames)
 					{
 						// open the file, this will overwrite the path which is needed for path-based raw-data (e.g. Bruker)
-						using (RawFile rawfile = OpenFile(filename, out m_sPath))
+						using (HeckLibRawFiles.HeckLibRawFile rawfile = OpenFile(filename, out m_sPath))
 						{
 							for (int scannumber = rawfile.FirstSpectrumNumber(); scannumber <= rawfile.LastSpectrumNumber(); ++scannumber)
 							{
@@ -606,9 +217,9 @@ namespace FragmentLab
 
 				m_sCurrentRawFile = rawfilename;
 				if (File.Exists(rawfilename + ".raw"))
-					m_pCurrentRawFile = new RawFileThermo(rawfilename + ".raw");
+					m_pCurrentRawFile = new HeckLibRawFileThermo.HeckLibThermoRawFile(rawfilename + ".raw");
 				else if (Directory.Exists(rawfilename + ".d"))
-					m_pCurrentRawFile = new RawFileBruker(rawfilename + ".d");
+					m_pCurrentRawFile = new HeckLibRawFileBruker.HeckLibBrukerRawFile(rawfilename + ".d");
 				else
 					throw new Exception("Unknown file format");
 			}
@@ -616,7 +227,7 @@ namespace FragmentLab
 			return LoadSpectrum(m_pCurrentRawFile, psm, settings, out topxranks, out model, out noise, out precursor, out scanheader);
 		}
 
-		private static Centroid[] LoadSpectrum(RawFile rawfile, PeptideSpectrumMatch psm, FragmentLabSettings settings, out int[] topxranks, out PeptideFragment.FragmentModel model, out INoiseDistribution noise, out PrecursorInfo precursor, out ScanHeader scanheader)
+		private static Centroid[] LoadSpectrum(HeckLibRawFiles.HeckLibRawFile rawfile, PeptideSpectrumMatch psm, FragmentLabSettings settings, out int[] topxranks, out PeptideFragment.FragmentModel model, out INoiseDistribution noise, out PrecursorInfo precursor, out ScanHeader scanheader)
 		{
 			// get the spectrum
 			precursor = rawfile.GetPrecursorInfo(psm.MinScan);
@@ -1101,9 +712,9 @@ namespace FragmentLab
 
 							m_sCurrentRawFile = rawfilename;
 							if (File.Exists(rawfilename + ".raw"))
-								m_pCurrentRawFile = new RawFileThermo(rawfilename + ".raw");
+								m_pCurrentRawFile = new HeckLibRawFileThermo.HeckLibThermoRawFile(rawfilename + ".raw");
 							else if (Directory.Exists(rawfilename + ".d"))
-								m_pCurrentRawFile = new RawFileBruker(rawfilename + ".d");
+								m_pCurrentRawFile = new HeckLibRawFileBruker.HeckLibBrukerRawFile(rawfilename + ".d");
 							else
 								throw new Exception("Unknown file format");
 						}
@@ -1200,7 +811,7 @@ namespace FragmentLab
 
 			private string m_sPath;
 			private string m_sCurrentRawFile;
-			private RawFile m_pCurrentRawFile;
+			private HeckLibRawFiles.HeckLibRawFile m_pCurrentRawFile;
 
 			private FragmentLabSettings m_pSettings;
 
@@ -1331,7 +942,7 @@ namespace FragmentLab
 		private Dictionary<string, List<PeptideSpectrumMatch>> m_lPsms;
 
 		private string m_sCurrentRawFile = null;
-		private RawFile m_pCurrentRawFile = null;
+		private HeckLibRawFiles.HeckLibRawFile m_pCurrentRawFile = null;
 
 		private Dictionary<string, Modification> m_lModifications = Modification.Parse("modifications.xml");
 		#endregion

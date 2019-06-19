@@ -20,6 +20,7 @@
 
 // C#
 using System;
+using System.Threading;
 using System.Windows.Forms;
 using System.Collections.Generic;
 
@@ -450,7 +451,7 @@ namespace FragmentLab
 
 
 		#region actions
-		private void CreatePDF(Document.BackgroundWorkerData data, IProgress<int> progress, HlBackgroundWorker<Document.BackgroundWorkerData>.CancellationPending iscancelled)
+		private void CreatePDF(Document.BackgroundWorkerData data, IProgress<int> progress, CancellationToken iscancelled)
 		{
 			using (PDFMaker maker = new PDFMaker(data.Filename))
 			{
@@ -461,7 +462,7 @@ namespace FragmentLab
 				psms.Sort((a, b) => a.RawFile.CompareTo(b.RawFile));
 				foreach (PeptideSpectrumMatch _psm in psms)
 				{
-					if (iscancelled())
+					if (iscancelled.IsCancellationRequested)
 						break;
 
 					PeptideSpectrumMatch psm = new PeptideSpectrumMatch(_psm);
