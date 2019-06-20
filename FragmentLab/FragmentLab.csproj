@@ -87,11 +87,12 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="hecklib-core" Version="1.0.0" />
-    <PackageReference Include="hecklib-graphics" Version="1.0.1" />
+    <PackageReference Include="hecklib-graphics" Version="1.1.0" />
     <PackageReference Include="hecklib-io" Version="1.0.0" />
     <PackageReference Include="hecklib-precalc" Version="1.0.3" />
     <PackageReference Include="hecklib-win32" Version="1.0.0" />
     <PackageReference Include="HeckLibRawFileBruker" Version="1.0.0" />
     <PackageReference Include="HeckLibRawFileThermo" Version="1.0.0" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.111" />
   </ItemGroup>
 </Project>

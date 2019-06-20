@@ -31,7 +31,7 @@ using HeckLib.chemistry;
 using HeckLib.backgroundworker;
 
 using HeckLib.visualization;
-using HeckLib.visualization.objectlistview;
+using HeckLib.objectlistview;
 
 using HeckLibWin32;
 
