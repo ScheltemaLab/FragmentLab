@@ -86,7 +86,7 @@
     <EmbeddedResource Include="icons\ubc_logo_retina.ico" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="hecklib-core" Version="1.0.3" />
+    <PackageReference Include="hecklib-core" Version="1.0.5" />
     <PackageReference Include="hecklib-graphics" Version="1.1.0" />
     <PackageReference Include="hecklib-io" Version="1.0.0" />
     <PackageReference Include="hecklib-precalc" Version="1.0.3" />
