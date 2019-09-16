@@ -209,7 +209,7 @@ namespace FragmentLab
 
 		public Centroid[] LoadSpectrum(PeptideSpectrumMatch psm, FragmentLabSettings settings, out int[] topxranks, out PeptideFragment.FragmentModel model, out INoiseDistribution noise, out PrecursorInfo precursor, out ScanHeader scanheader)
 		{
-			string rawfilename = Path.Combine(m_sPath, Path.GetFileNameWithoutExtension(psm.RawFile));
+			string rawfilename = Path.Combine(m_sPath, FilesA.GetFileNameWithoutExtension(psm.RawFile));
 			if (rawfilename != m_sCurrentRawFile)
 			{
 				if (m_pCurrentRawFile != null)
@@ -229,6 +229,9 @@ namespace FragmentLab
 
 		private static Centroid[] LoadSpectrum(HeckLibRawFiles.HeckLibRawFile rawfile, PeptideSpectrumMatch psm, FragmentLabSettings settings, out int[] topxranks, out PeptideFragment.FragmentModel model, out INoiseDistribution noise, out PrecursorInfo precursor, out ScanHeader scanheader)
 		{
+			double minTIC, maxTIC, meanTIC;
+			rawfile.GetMs2TicStatistics(out minTIC, out maxTIC, out meanTIC);
+
 			// get the spectrum
 			precursor = rawfile.GetPrecursorInfo(psm.MinScan);
 
@@ -266,7 +269,7 @@ namespace FragmentLab
 				if (iscancelled.IsCancellationRequested)
 					break;
 
-				string myfilename = Path.Combine(path, Path.GetFileNameWithoutExtension(psm.RawFile) + "_" + psm.MinScan + ".txt");
+				string myfilename = Path.Combine(path, FilesA.GetFileNameWithoutExtension(psm.RawFile) + "_" + psm.MinScan + ".txt");
 
 				int[] topxranks;
 				PeptideFragment.FragmentModel model;
@@ -685,6 +688,7 @@ namespace FragmentLab
 			public override void Execute()
 			{
 				m_nCurrentGroupedPsm = 0;
+				double minTIC = 0, maxTIC = 0, meanTIC = 0;
 				foreach (List<int> psmIds in m_aGroupedPsms)
 				{
 					m_nCurrentGroupedPsm++;
@@ -704,7 +708,7 @@ namespace FragmentLab
 						PeptideSpectrumMatch psm = m_aAllPsms[psmId];
 
 						// open the file (?)
-						string rawfilename = Path.Combine(m_sPath, Path.GetFileNameWithoutExtension(psm.RawFile));
+						string rawfilename = Path.Combine(m_sPath, FilesA.GetFileNameWithoutExtension(psm.RawFile));
 						if (rawfilename != m_sCurrentRawFile)
 						{
 							if (m_pCurrentRawFile != null)
@@ -717,6 +721,8 @@ namespace FragmentLab
 								m_pCurrentRawFile = new HeckLibRawFileBruker.HeckLibBrukerRawFile(rawfilename + ".d");
 							else
 								throw new Exception("Unknown file format");
+
+							m_pCurrentRawFile.GetMs2TicStatistics(out minTIC, out maxTIC, out meanTIC);
 						}
 
 						// extract the meta info
@@ -789,16 +795,22 @@ namespace FragmentLab
 						model.TurnOff(PeptideFragment.MASSSHIFT_WATERLOSS | PeptideFragment.MASSSHIFT_AMMONIALOSS | PeptideFragment.MASSSHIFT_NEUTRALLOSS);
 
 					int[] topxranks;
-					centroids = SpectrumUtils.TopX(centroids, model.topx, model.topx_massrange, out topxranks);
+					Centroid[] centroids_filtered = SpectrumUtils.TopX(centroids, model.topx, model.topx_massrange, out topxranks);
 
-					// write the spectrum
-					if (centroids.Length < 10)
+					// quality control
+					if (centroids_filtered.Length < 10)
 						continue;
 
-					string title = string.Format("SPECTRA:{0} MOBILITY:{1} MOBILITYLENGTH:{2} CCS:{3} INTENSITY:{4}", all_mzs.Count, mobility, mobility_length, ccs, best_precursor.Intensity);
+					// calculate discriminant scores
+					double msmsEval = SpectrumUtils.MsmsEval(best_precursor, centroids, meanTIC);
+					double goodDiffFraction = SpectrumUtils.GoodDiffFraction(centroids);
+					double xrea = SpectrumUtils.Xrea(SpectrumUtils.CumulativeIntensityNormalization(centroids));
+
+					// write the spectrum
+					string title = string.Format("SPECTRA:{0} MOBILITY:{1} MOBILITYLENGTH:{2} CCS:{3} INTENSITY:{4} D:{5} GDFR:{6} Xrea:{7}", all_mzs.Count, mobility, mobility_length, ccs, best_precursor.Intensity, msmsEval, goodDiffFraction, xrea);
 
 					PrecursorInfo pinfo = new PrecursorInfo(best_precursor);
-					MgfWriter.WriteSpectrum(m_fMgfWriter, title, pinfo, centroids, best_scanheader.Polarity, Spectrum.MassAnalyzer.TimeOfFlight);
+					MgfWriter.WriteSpectrum(m_fMgfWriter, title, pinfo, centroids_filtered, best_scanheader.Polarity, Spectrum.MassAnalyzer.TimeOfFlight);
 				}
 			}
 
