@@ -9,21 +9,6 @@
                 <Component Id="BIO.CORE.DLL" DiskId="1" Guid="6B6F5807-A66C-462F-BAC8-8854759BAA7F">
                     <File Id="BIO.CORE.DLL" Name="Bio.Core.dll" Source="bin\Debug\net472\Bio.Core.dll" />
                 </Component>
-                <Component Id="CRASH_REPORT_19_08_07_22_58_39.TXT" DiskId="1" Guid="40656B2F-EA5B-4D49-8AEC-C343CB38EB76">
-                    <File Id="CRASH_REPORT_19_08_07_22_58_39.TXT" Name="crash_report@19-08-07_22-58-39.txt" Source="bin\Debug\net472\crash_report@19-08-07_22-58-39.txt" />
-                </Component>
-                <Component Id="CRASH_REPORT_19_08_07_22_59_55.TXT" DiskId="1" Guid="EBC40DB5-3D39-4E2E-BE17-4CC45A4D83BF">
-                    <File Id="CRASH_REPORT_19_08_07_22_59_55.TXT" Name="crash_report@19-08-07_22-59-55.txt" Source="bin\Debug\net472\crash_report@19-08-07_22-59-55.txt" />
-                </Component>
-                <Component Id="CRASH_REPORT_19_08_07_22_59_56.TXT" DiskId="1" Guid="99DC19F7-908A-4F77-8787-3B3552567F6E">
-                    <File Id="CRASH_REPORT_19_08_07_22_59_56.TXT" Name="crash_report@19-08-07_22-59-56.txt" Source="bin\Debug\net472\crash_report@19-08-07_22-59-56.txt" />
-                </Component>
-                <Component Id="CRASH_REPORT_19_09_16_21_30_16.TXT" DiskId="1" Guid="E7C862DC-AC72-4D76-A18F-2C719C8A349E">
-                    <File Id="CRASH_REPORT_19_09_16_21_30_16.TXT" Name="crash_report@19-09-16_21-30-16.txt" Source="bin\Debug\net472\crash_report@19-09-16_21-30-16.txt" />
-                </Component>
-                <Component Id="CRASH_REPORT_19_09_16_21_32_55.TXT" DiskId="1" Guid="14ECF9FE-1872-433D-BD73-F9037BDFF3C2">
-                    <File Id="CRASH_REPORT_19_09_16_21_32_55.TXT" Name="crash_report@19-09-16_21-32-55.txt" Source="bin\Debug\net472\crash_report@19-09-16_21-32-55.txt" />
-                </Component>
                 <Component Id="FRAGMENTLAB.EXE" DiskId="1" Guid="85C56B18-CB4B-4BF7-BEB9-44F72808EB77">
                     <File Id="FRAGMENTLAB.EXE" Name="FragmentLab.exe" Source="bin\Debug\net472\FragmentLab.exe">
                         <Shortcut Id="desktopShortcut" Directory="DesktopFolder" Name="Fragment laboratory" WorkingDirectory="INSTALLDIR" Advertise="yes" Icon="DesktopIcon.exe" IconIndex="0" />
@@ -36,14 +21,8 @@
                 <Component Id="FRAGMENTLAB.PDB" DiskId="1" Guid="ECF9F2B6-25D6-47E7-95B7-CF84AF66156C">
                     <File Id="FRAGMENTLAB.PDB" Name="FragmentLab.pdb" Source="bin\Debug\net472\FragmentLab.pdb" />
                 </Component>
-                <Component Id="GPLV2.TXT" DiskId="1" Guid="0D44F9C2-0FD2-406C-A870-BF42D832B5B5">
-                    <File Id="GPLV2.TXT" Name="gplv2.txt" Source="bin\Debug\net472\gplv2.txt" />
-                </Component>
                 <Component Id="HECKLIB_CORE.DLL" DiskId="1" Guid="5BA1FBE7-8355-498A-9117-6795582323BF">
                     <File Id="HECKLIB_CORE.DLL" Name="hecklib-core.dll" Source="bin\Debug\net472\hecklib-core.dll" />
-                </Component>
-                <Component Id="HECKLIB_CORE.PDB" DiskId="1" Guid="269F9928-99A5-41F4-BE9E-6C79184B677D">
-                    <File Id="HECKLIB_CORE.PDB" Name="hecklib-core.pdb" Source="bin\Debug\net472\hecklib-core.pdb" />
                 </Component>
                 <Component Id="HECKLIB_GRAPHICS.DLL" DiskId="1" Guid="238807CB-76E7-4886-9B9A-22A58125703D">
                     <File Id="HECKLIB_GRAPHICS.DLL" Name="hecklib-graphics.dll" Source="bin\Debug\net472\hecklib-graphics.dll" />
@@ -158,17 +137,10 @@
         </Directory>
         <Feature Id="DefaultFeature" Title="Main Feature" Level="1">
             <ComponentRef Id="BIO.CORE.DLL" />
-            <ComponentRef Id="CRASH_REPORT_19_08_07_22_58_39.TXT" />
-            <ComponentRef Id="CRASH_REPORT_19_08_07_22_59_55.TXT" />
-            <ComponentRef Id="CRASH_REPORT_19_08_07_22_59_56.TXT" />
-            <ComponentRef Id="CRASH_REPORT_19_09_16_21_30_16.TXT" />
-            <ComponentRef Id="CRASH_REPORT_19_09_16_21_32_55.TXT" />
             <ComponentRef Id="FRAGMENTLAB.EXE" />
             <ComponentRef Id="FRAGMENTLAB.EXE.CONFIG" />
             <ComponentRef Id="FRAGMENTLAB.PDB" />
-            <ComponentRef Id="GPLV2.TXT" />
             <ComponentRef Id="HECKLIB_CORE.DLL" />
-            <ComponentRef Id="HECKLIB_CORE.PDB" />
             <ComponentRef Id="HECKLIB_GRAPHICS.DLL" />
             <ComponentRef Id="HECKLIB_IO.DLL" />
             <ComponentRef Id="HECKLIB_PRECALC.DLL" />
