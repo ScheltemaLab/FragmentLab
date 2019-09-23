@@ -203,7 +203,7 @@ namespace FragmentLab
 		private void openToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			OpenFileDialog dlg = new OpenFileDialog();
-			dlg.Filter = "PD PSM Files|*.txt|MQ Evidence Files|*.txt|MQ MsmsScans Files|*.txt|Vendor RAW Files|*.raw;*.tdf";
+			dlg.Filter = "PD PSM Files|*.txt|MQ Evidence Files|*.txt|MQ MsmsScans Files|*.txt|Vendor RAW Files|*.raw;*.tdf;*.mgf";
 			dlg.FilterIndex = 1;
 			dlg.Multiselect = true;
 

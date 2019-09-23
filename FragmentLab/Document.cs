@@ -63,22 +63,27 @@ namespace FragmentLab
 		#region rawfile access
 		private HeckLibRawFiles.HeckLibRawFile OpenFile(string filename, out string path)
 		{
-			string extension = Path.GetExtension(filename).ToLower();
+			string extension = FilesA.GetFileExtension(filename).ToLower();
 
-			if (extension == ".raw")
+			if (extension == "raw")
 			{
 				path = Path.GetDirectoryName(filename);
 				return new HeckLibRawFileThermo.HeckLibThermoRawFile(filename);
 			}
-			else if (extension == ".d")
+			else if (extension == "d")
 			{
 				path = Directory.GetParent(filename).FullName;
 				return new HeckLibRawFileBruker.HeckLibBrukerRawFile(filename);
 			}
-			else if (extension == ".tdf")
+			else if (extension == "tdf")
 			{
-				path = Directory.GetParent(Path.GetDirectoryName(filename)).FullName;
+				path = Directory.GetParent(FilesA.GetDirectoryName(filename)).FullName;
 				return new HeckLibRawFileBruker.HeckLibBrukerRawFile(Path.GetDirectoryName(filename));
+			}
+			else if (extension == "mgf")
+			{
+				path = Directory.GetParent(FilesA.GetDirectoryName(filename)).FullName;
+				return new HeckLibRawFileMgf.HeckLibMgfRawFile(filename);
 			}
 			else
 				throw new Exception("unknown extension '" + extension + "'.");
@@ -218,6 +223,8 @@ namespace FragmentLab
 				m_sCurrentRawFile = rawfilename;
 				if (File.Exists(rawfilename + ".raw"))
 					m_pCurrentRawFile = new HeckLibRawFileThermo.HeckLibThermoRawFile(rawfilename + ".raw");
+				else if (File.Exists(rawfilename + ".mgf"))
+					m_pCurrentRawFile = new HeckLibRawFileMgf.HeckLibMgfRawFile(rawfilename + ".mgf");
 				else if (Directory.Exists(rawfilename + ".d"))
 					m_pCurrentRawFile = new HeckLibRawFileBruker.HeckLibBrukerRawFile(rawfilename + ".d");
 				else
@@ -247,7 +254,12 @@ namespace FragmentLab
 			centroids = SpectrumUtils.Deisotope(centroids, isotopes, psm.Charge, true);
 
 			// load the fragmentation model
-			model = new PeptideFragment.FragmentModel(PeptideFragment.GetFragmentModel(settings.Fragmentation == Spectrum.FragmentationType.None ? precursor.Fragmentation : settings.Fragmentation));
+			Spectrum.FragmentationType fragtype = Spectrum.FragmentationType.CID;
+			if (settings.Fragmentation != Spectrum.FragmentationType.None)
+				fragtype = settings.Fragmentation;
+			else if (precursor.Fragmentation != Spectrum.FragmentationType.None)
+				fragtype = precursor.Fragmentation;
+			model = new PeptideFragment.FragmentModel(PeptideFragment.GetFragmentModel(fragtype));
 			model.tolerance = settings.MatchTolerance;
 			if (settings.ExcludeNeutralLosses == true)
 				model.TurnOff(PeptideFragment.MASSSHIFT_WATERLOSS | PeptideFragment.MASSSHIFT_AMMONIALOSS | PeptideFragment.MASSSHIFT_NEUTRALLOSS);
@@ -670,7 +682,7 @@ namespace FragmentLab
 		#region the mess that is export to mgf...
 		public class ExportAsMgfThread : WorkerThread, IDisposable
 		{
-			public ExportAsMgfThread(string outfile, string path, List<int>[] grouped_psms, PeptideSpectrumMatch[] allpsms, FragmentLabSettings settings) : base("Export as MGF")
+			public ExportAsMgfThread(string outfile, string metafile, string path, List<int>[] grouped_psms, PeptideSpectrumMatch[] allpsms, FragmentLabSettings settings) : base("Export as MGF")
 			{
 				m_sPath = path;
 				m_aAllPsms = allpsms;
@@ -678,11 +690,28 @@ namespace FragmentLab
 				m_pSettings = settings;
 
 				m_fMgfWriter = new StreamWriter(new FileStream(outfile, FileMode.Create, FileAccess.Write, FileShare.Read, 65536, true));
+
+				m_fMgfMetaWriter = new CsvWriter(metafile);
+				m_fMgfMetaWriter.AddColumn("Raw file",				typeof(string));
+				m_fMgfMetaWriter.AddColumn("Scan number",			typeof(string));
+				m_fMgfMetaWriter.AddColumn("Retention time",		typeof(string));
+				m_fMgfMetaWriter.AddColumn("m/z",					typeof(string));
+				m_fMgfMetaWriter.AddColumn("Charge",				typeof(string));
+				m_fMgfMetaWriter.AddColumn("Monoisotopic mass",		typeof(string));
+				m_fMgfMetaWriter.AddColumn("SPECTRA",				typeof(string));
+				m_fMgfMetaWriter.AddColumn("MOBILITY",				typeof(string));
+				m_fMgfMetaWriter.AddColumn("MOBILITYLENGTH",		typeof(string));
+				m_fMgfMetaWriter.AddColumn("CCS",					typeof(string));
+				m_fMgfMetaWriter.AddColumn("INTENSITY",				typeof(string));
+				m_fMgfMetaWriter.AddColumn("D",						typeof(string));
+				m_fMgfMetaWriter.AddColumn("GDFR",					typeof(string));
+				m_fMgfMetaWriter.AddColumn("Xrea",					typeof(string));
 			}
 
 			public override void Dispose()
 			{
 				m_fMgfWriter.Close();
+				m_fMgfMetaWriter.Close();
 			}
 
 			public override void Execute()
@@ -811,6 +840,24 @@ namespace FragmentLab
 
 					PrecursorInfo pinfo = new PrecursorInfo(best_precursor);
 					MgfWriter.WriteSpectrum(m_fMgfWriter, title, pinfo, centroids_filtered, best_scanheader.Polarity, Spectrum.MassAnalyzer.TimeOfFlight);
+
+					// write the meta info
+					CsvRow row = m_fMgfMetaWriter.CreateRow();
+					row["Raw file"]					= (string)pinfo.RawFile;
+					row["Scan number"]				= (string)pinfo.ScanNumber.ToString();
+					row["Retention time"]			= (string)pinfo.RetentionTime.ToString();
+					row["m/z"]						= (string)pinfo.Mz.ToString();
+					row["Charge"]					= (string)pinfo.Charge.ToString();
+					row["Monoisotopic mass"]		= (string)MassSpectrometry.ToMass(pinfo.Mz, pinfo.Charge).ToString();
+					row["SPECTRA"]					= (string)all_mzs.Count.ToString();
+					row["MOBILITY"]					= (string)mobility.ToString();
+					row["MOBILITYLENGTH"]			= (string)mobility_length.ToString();
+					row["CCS"]						= (string)ccs.ToString();
+					row["INTENSITY"]				= (string)best_precursor.Intensity.ToString();
+					row["D"]						= (string)msmsEval.ToString();
+					row["GDFR"]						= (string)goodDiffFraction.ToString();
+					row["Xrea"]						= (string)xrea.ToString();
+					m_fMgfMetaWriter.WriteRow(row);
 				}
 			}
 
@@ -820,6 +867,7 @@ namespace FragmentLab
 			}
 
 			private StreamWriter m_fMgfWriter;
+			private CsvWriter m_fMgfMetaWriter;
 
 			private string m_sPath;
 			private string m_sCurrentRawFile;
@@ -925,11 +973,13 @@ namespace FragmentLab
 
 			// make the separate threads
 			List<string> filenames = new List<string>();
+			List<string> metanames = new List<string>();
 			WorkerThreadGroup exportgrp = new WorkerThreadGroup();
 			for (int i = 0; i < sliced_groupedpsms.Count; ++i)
 			{
 				filenames.Add(Path.GetTempFileName());
-				exportgrp.AddWorker(new ExportAsMgfThread(filenames.Last(), m_sPath, sliced_groupedpsms[i], psms, settings));
+				metanames.Add(Path.GetTempFileName());
+				exportgrp.AddWorker(new ExportAsMgfThread(filenames.Last(), metanames.Last(), m_sPath, sliced_groupedpsms[i], psms, settings));
 			}
 			exportgrp.Start(!HeckLibSettings.MultiThreading);
 			while (exportgrp.IsRunning())
@@ -943,6 +993,7 @@ namespace FragmentLab
 
 			// combine the various output files into one
 			FilesA.MergeFiles(filenames.ToArray(), data.Filename);
+			FilesA.MergeFiles(metanames.ToArray(), data.Filename + "meta", true);
 		}
 		#endregion
 
