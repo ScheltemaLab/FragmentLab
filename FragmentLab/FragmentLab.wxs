@@ -1,132 +1,135 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-    <Product Id="54064800-6CA5-4101-846C-DFCA4E92D038" Name="Fragment laboratory" Language="1033" Version="1.0.0.0" Manufacturer="Heck-lab" UpgradeCode="57241ABD-C40C-41C5-9AE8-F84BBF746F03">
-        <Package Description="Test file in a Product" Comments="Simple test" InstallerVersion="200" Compressed="yes" />
+    <Product Id="54064800-6CA5-4101-846C-DFCA4E92D038" Name="Fragment laboratory" Language="1033" Version="1.0.0.0" Manufacturer="Heck laboratory" UpgradeCode="57241ABD-C40C-41C5-9AE8-F84BBF746F03">
+        <Package Description="Test file in a Product" Comments="Installer for HeckLib FragmentLab" InstallerVersion="200" Compressed="yes" />
         <Media Id="1" Cabinet="simple.cab" EmbedCab="yes" />
         <Directory Id="TARGETDIR" Name="SourceDir">
-            <Directory Id="ProgramFilesFolder" Name="PFiles" />
-            <Directory Id="NET472" Name="net472">
-                <Component Id="BIO.CORE.DLL" DiskId="1" Guid="6B6F5807-A66C-462F-BAC8-8854759BAA7F">
-                    <File Id="BIO.CORE.DLL" Name="Bio.Core.dll" Source="bin\Debug\net472\Bio.Core.dll" />
-                </Component>
-                <Component Id="FRAGMENTLAB.EXE" DiskId="1" Guid="85C56B18-CB4B-4BF7-BEB9-44F72808EB77">
-                    <File Id="FRAGMENTLAB.EXE" Name="FragmentLab.exe" Source="bin\Debug\net472\FragmentLab.exe">
-                        <Shortcut Id="desktopShortcut" Directory="DesktopFolder" Name="Fragment laboratory" WorkingDirectory="INSTALLDIR" Advertise="yes" Icon="DesktopIcon.exe" IconIndex="0" />
-                        <Shortcut Id="ExeShortcut" Directory="ProgramMenuDir" Name="HeckLib" Advertise="yes" Icon="StartMenuIcon.exe" IconIndex="0" />
-                    </File>
-                </Component>
-                <Component Id="FRAGMENTLAB.EXE.CONFIG" DiskId="1" Guid="8D32EF55-F65B-4DBD-B4BE-B0F190146A23">
-                    <File Id="FRAGMENTLAB.EXE.CONFIG" Name="FragmentLab.exe.config" Source="bin\Debug\net472\FragmentLab.exe.config" />
-                </Component>
-                <Component Id="FRAGMENTLAB.PDB" DiskId="1" Guid="ECF9F2B6-25D6-47E7-95B7-CF84AF66156C">
-                    <File Id="FRAGMENTLAB.PDB" Name="FragmentLab.pdb" Source="bin\Debug\net472\FragmentLab.pdb" />
-                </Component>
-                <Component Id="HECKLIB_CORE.DLL" DiskId="1" Guid="5BA1FBE7-8355-498A-9117-6795582323BF">
-                    <File Id="HECKLIB_CORE.DLL" Name="hecklib-core.dll" Source="bin\Debug\net472\hecklib-core.dll" />
-                </Component>
-                <Component Id="HECKLIB_GRAPHICS.DLL" DiskId="1" Guid="238807CB-76E7-4886-9B9A-22A58125703D">
-                    <File Id="HECKLIB_GRAPHICS.DLL" Name="hecklib-graphics.dll" Source="bin\Debug\net472\hecklib-graphics.dll" />
-                </Component>
-                <Component Id="HECKLIB_IO.DLL" DiskId="1" Guid="3290A449-8927-40F8-AF19-6E897B8AB442">
-                    <File Id="HECKLIB_IO.DLL" Name="hecklib-io.dll" Source="bin\Debug\net472\hecklib-io.dll" />
-                </Component>
-                <Component Id="HECKLIB_PRECALC.DLL" DiskId="1" Guid="95EF93E0-FA0C-45D3-9E42-A2BC3FDD20A0">
-                    <File Id="HECKLIB_PRECALC.DLL" Name="hecklib-precalc.dll" Source="bin\Debug\net472\hecklib-precalc.dll" />
-                </Component>
-                <Component Id="HECKLIB_RAWFILES_BRUKER.DLL" DiskId="1" Guid="BCC065DB-3976-48D1-9B8C-C624340C8D4D">
-                    <File Id="HECKLIB_RAWFILES_BRUKER.DLL" Name="hecklib-rawfiles-bruker.dll" Source="bin\Debug\net472\hecklib-rawfiles-bruker.dll" />
-                </Component>
-                <Component Id="HECKLIB_RAWFILES_MGF.DLL" DiskId="1" Guid="3D6C57DD-3BD1-42E7-8A99-260573C63296">
-                    <File Id="HECKLIB_RAWFILES_MGF.DLL" Name="hecklib-rawfiles-mgf.dll" Source="bin\Debug\net472\hecklib-rawfiles-mgf.dll" />
-                </Component>
-                <Component Id="HECKLIB_RAWFILES_THERMO.DLL" DiskId="1" Guid="3A9EDF3D-FB71-46AB-B9CF-D42410ADFB11">
-                    <File Id="HECKLIB_RAWFILES_THERMO.DLL" Name="hecklib-rawfiles-thermo.dll" Source="bin\Debug\net472\hecklib-rawfiles-thermo.dll" />
-                </Component>
-                <Component Id="HECKLIB_RAWFILES.DLL" DiskId="1" Guid="28FE1DD1-003B-486F-8BEC-1A4F141A6CDE">
-                    <File Id="HECKLIB_RAWFILES.DLL" Name="hecklib-rawfiles.dll" Source="bin\Debug\net472\hecklib-rawfiles.dll" />
-                </Component>
-                <Component Id="HECKLIB_WIN32.DLL" DiskId="1" Guid="1542B1D3-683B-49DA-BE8F-EE883E24690E">
-                    <File Id="HECKLIB_WIN32.DLL" Name="hecklib-win32.dll" Source="bin\Debug\net472\hecklib-win32.dll" />
-                </Component>
-                <Component Id="ITEXTSHARP.DLL" DiskId="1" Guid="B450EDED-9DFD-40E8-87FE-12BF6AB0A9B0">
-                    <File Id="ITEXTSHARP.DLL" Name="itextsharp.dll" Source="bin\Debug\net472\itextsharp.dll" />
-                </Component>
-                <Component Id="NEWTONSOFT.JSON.DLL" DiskId="1" Guid="7648667B-4731-4319-8137-74FD84A5EBB2">
-                    <File Id="NEWTONSOFT.JSON.DLL" Name="Newtonsoft.Json.dll" Source="bin\Debug\net472\Newtonsoft.Json.dll" />
-                </Component>
-                <Component Id="OBJECTLISTVIEW.DLL" DiskId="1" Guid="A9D47969-A6DB-43F8-A3B0-8159C87CE560">
-                    <File Id="OBJECTLISTVIEW.DLL" Name="ObjectListView.dll" Source="bin\Debug\net472\ObjectListView.dll" />
-                </Component>
-                <Component Id="PDFSHARP_WPF.DLL" DiskId="1" Guid="47701DCE-0481-44ED-9F9B-A540E9839080">
-                    <File Id="PDFSHARP_WPF.DLL" Name="PdfSharp-WPF.dll" Source="bin\Debug\net472\PdfSharp-WPF.dll" />
-                </Component>
-                <Component Id="PDFSHARP.CHARTING_WPF.DLL" DiskId="1" Guid="4039B332-9DA4-46C3-BB2B-A22E50D7A643">
-                    <File Id="PDFSHARP.CHARTING_WPF.DLL" Name="PdfSharp.Charting-wpf.dll" Source="bin\Debug\net472\PdfSharp.Charting-wpf.dll" />
-                </Component>
-                <Component Id="PDFSHARP.CHARTING.DLL" DiskId="1" Guid="AACB4BE7-DD19-48C2-9446-C8F754C7369A">
-                    <File Id="PDFSHARP.CHARTING.DLL" Name="PdfSharp.Charting.dll" Source="bin\Debug\net472\PdfSharp.Charting.dll" />
-                </Component>
-                <Component Id="PDFSHARP.DLL" DiskId="1" Guid="AAE0D685-067F-479F-AD8B-5E8C4F43BBAF">
-                    <File Id="PDFSHARP.DLL" Name="PdfSharp.dll" Source="bin\Debug\net472\PdfSharp.dll" />
-                </Component>
-                <Component Id="PDFSHARP.XPS.DLL" DiskId="1" Guid="C4971488-1546-48B5-9CF8-39607015C6EE">
-                    <File Id="PDFSHARP.XPS.DLL" Name="PdfSharp.Xps.dll" Source="bin\Debug\net472\PdfSharp.Xps.dll" />
-                </Component>
-                <Component Id="SYSTEM.DATA.SQLITE.DLL" DiskId="1" Guid="E2DB95D1-A5F9-4FAB-8BA5-E5C8694DB256">
-                    <File Id="SYSTEM.DATA.SQLITE.DLL" Name="System.Data.SQLite.dll" Source="bin\Debug\net472\System.Data.SQLite.dll" />
-                </Component>
-                <Component Id="SYSTEM.DRAWING.COMMON.DLL" DiskId="1" Guid="016883D1-F87C-4402-999F-AD601AA66E6F">
-                    <File Id="SYSTEM.DRAWING.COMMON.DLL" Name="System.Drawing.Common.dll" Source="bin\Debug\net472\System.Drawing.Common.dll" />
-                </Component>
-                <Component Id="SYSTEM.IO.PACKAGING.DLL" DiskId="1" Guid="3801423E-99B9-4C60-BEC5-0E7848F50642">
-                    <File Id="SYSTEM.IO.PACKAGING.DLL" Name="System.IO.Packaging.dll" Source="bin\Debug\net472\System.IO.Packaging.dll" />
-                </Component>
-                <Component Id="THERMOFISHER.COMMONCORE.BACKGROUNDSUBTRACTION.DLL" DiskId="1" Guid="C3218C6B-C901-4E2D-A398-5F2C2B2E13E9">
-                    <File Id="THERMOFISHER.COMMONCORE.BACKGROUNDSUBTRACTION.DLL" Name="ThermoFisher.CommonCore.BackgroundSubtraction.dll" Source="bin\Debug\net472\ThermoFisher.CommonCore.BackgroundSubtraction.dll" />
-                </Component>
-                <Component Id="THERMOFISHER.COMMONCORE.DATA.DLL" DiskId="1" Guid="65F0F75C-9D80-4B5A-829D-8D2C0443594E">
-                    <File Id="THERMOFISHER.COMMONCORE.DATA.DLL" Name="ThermoFisher.CommonCore.Data.dll" Source="bin\Debug\net472\ThermoFisher.CommonCore.Data.dll" />
-                </Component>
-                <Component Id="THERMOFISHER.COMMONCORE.MASSPRECISIONESTIMATOR.DLL" DiskId="1" Guid="1F2E6A4B-A1C8-4DEA-91FB-EF7378B3841F">
-                    <File Id="THERMOFISHER.COMMONCORE.MASSPRECISIONESTIMATOR.DLL" Name="ThermoFisher.CommonCore.MassPrecisionEstimator.dll" Source="bin\Debug\net472\ThermoFisher.CommonCore.MassPrecisionEstimator.dll" />
-                </Component>
-                <Component Id="THERMOFISHER.COMMONCORE.RAWFILEREADER.DLL" DiskId="1" Guid="C930CBB0-4463-4143-B1FD-1F486AB1A6FF">
-                    <File Id="THERMOFISHER.COMMONCORE.RAWFILEREADER.DLL" Name="ThermoFisher.CommonCore.RawFileReader.dll" Source="bin\Debug\net472\ThermoFisher.CommonCore.RawFileReader.dll" />
-                </Component>
-                <Component Id="TIMSDATA.DLL" DiskId="1" Guid="786D56AD-FA40-46A1-917F-A65898C9E85A">
-                    <File Id="TIMSDATA.DLL" Name="timsdata.dll" Source="bin\Debug\net472\timsdata.dll" />
-                </Component>
-                <Component Id="ZLIB.NET.DLL" DiskId="1" Guid="37D04BFF-DFF2-4C32-85BC-20AB97682E3E">
-                    <File Id="ZLIB.NET.DLL" Name="zlib.net.dll" Source="bin\Debug\net472\zlib.net.dll" />
-                </Component>
-                <Directory Id="DE" Name="de">
-                    <Component Id="PDFSHARP_WPF.RESOURCES.DLL" DiskId="1" Guid="1B59D379-2860-4408-B324-280C8A6F0C92">
-                        <File Id="PDFSHARP_WPF.RESOURCES.DLL" Name="PdfSharp-wpf.resources.dll" Source="bin\Debug\net472\de\PdfSharp-wpf.resources.dll" />
-                    </Component>
-                    <Component Id="PDFSHARP.CHARTING_WPF.RESOURCES.DLL" DiskId="1" Guid="94DAE872-C1B5-4DB1-8C95-42488CB03069">
-                        <File Id="PDFSHARP.CHARTING_WPF.RESOURCES.DLL" Name="PdfSharp.Charting-wpf.resources.dll" Source="bin\Debug\net472\de\PdfSharp.Charting-wpf.resources.dll" />
-                    </Component>
-                    <Component Id="PDFSHARP.CHARTING.RESOURCES.DLL" DiskId="1" Guid="D7A8BA12-73B2-4A47-84E8-CD465471C27B">
-                        <File Id="PDFSHARP.CHARTING.RESOURCES.DLL" Name="PdfSharp.Charting.resources.dll" Source="bin\Debug\net472\de\PdfSharp.Charting.resources.dll" />
-                    </Component>
-                    <Component Id="PDFSHARP.RESOURCES.DLL" DiskId="1" Guid="76A84F76-4F1A-45E7-AC9E-5819C3A54E6C">
-                        <File Id="PDFSHARP.RESOURCES.DLL" Name="PdfSharp.resources.dll" Source="bin\Debug\net472\de\PdfSharp.resources.dll" />
-                    </Component>
-                </Directory>
-                <Directory Id="X64" Name="x64">
-                    <Component Id="SQLITE.INTEROP.DLL" DiskId="1" Guid="53260348-3BF1-41EC-9194-9DCB3DA6700C">
-                        <File Id="SQLITE.INTEROP.DLL" Name="SQLite.Interop.dll" Source="bin\Debug\net472\x64\SQLite.Interop.dll" />
-                    </Component>
-                </Directory>
-                <Directory Id="X86" Name="x86">
-                    <Component Id="SQLITE.INTEROP.DLL_1" DiskId="1" Guid="5B26DDE4-90FB-4D8D-B178-E46451C7F824">
-                        <File Id="SQLITE.INTEROP.DLL_1" Name="SQLite.Interop.dll" Source="bin\Debug\net472\x86\SQLite.Interop.dll" />
-                    </Component>
-                </Directory>
+			<Directory Id="ProgramFilesFolder" >
+				<Directory Id="Company" Name="HeckLib">
+					<Directory Id="INSTALLFOLDER" Name="FragmentLab">
+						<Component Id="BIO.CORE.DLL" DiskId="1" Guid="6B6F5807-A66C-462F-BAC8-8854759BAA7F">
+							<File Id="BIO.CORE.DLL" Name="Bio.Core.dll" Source="bin\Debug\net472\Bio.Core.dll" />
+						</Component>
+						<Component Id="FRAGMENTLAB.EXE" DiskId="1" Guid="85C56B18-CB4B-4BF7-BEB9-44F72808EB77">
+							<File Id="FRAGMENTLAB.EXE" Name="FragmentLab.exe" Source="bin\Debug\net472\FragmentLab.exe">
+								<Shortcut Id="desktopShortcut" Directory="DesktopFolder" Name="Fragment laboratory" WorkingDirectory="INSTALLDIR" Advertise="yes" Icon="DesktopIcon.exe" IconIndex="0" />
+								<Shortcut Id="ExeShortcut" Directory="ProgramMenuDir" Name="HeckLib" Advertise="yes" Icon="StartMenuIcon.exe" IconIndex="0" />
+							</File>
+						</Component>
+						<Component Id="FRAGMENTLAB.EXE.CONFIG" DiskId="1" Guid="8D32EF55-F65B-4DBD-B4BE-B0F190146A23">
+							<File Id="FRAGMENTLAB.EXE.CONFIG" Name="FragmentLab.exe.config" Source="bin\Debug\net472\FragmentLab.exe.config" />
+						</Component>
+						<Component Id="FRAGMENTLAB.PDB" DiskId="1" Guid="ECF9F2B6-25D6-47E7-95B7-CF84AF66156C">
+							<File Id="FRAGMENTLAB.PDB" Name="FragmentLab.pdb" Source="bin\Debug\net472\FragmentLab.pdb" />
+						</Component>
+						<Component Id="HECKLIB_CORE.DLL" DiskId="1" Guid="5BA1FBE7-8355-498A-9117-6795582323BF">
+							<File Id="HECKLIB_CORE.DLL" Name="hecklib-core.dll" Source="bin\Debug\net472\hecklib-core.dll" />
+						</Component>
+						<Component Id="HECKLIB_GRAPHICS.DLL" DiskId="1" Guid="238807CB-76E7-4886-9B9A-22A58125703D">
+							<File Id="HECKLIB_GRAPHICS.DLL" Name="hecklib-graphics.dll" Source="bin\Debug\net472\hecklib-graphics.dll" />
+						</Component>
+						<Component Id="HECKLIB_IO.DLL" DiskId="1" Guid="3290A449-8927-40F8-AF19-6E897B8AB442">
+							<File Id="HECKLIB_IO.DLL" Name="hecklib-io.dll" Source="bin\Debug\net472\hecklib-io.dll" />
+						</Component>
+						<Component Id="HECKLIB_PRECALC.DLL" DiskId="1" Guid="95EF93E0-FA0C-45D3-9E42-A2BC3FDD20A0">
+							<File Id="HECKLIB_PRECALC.DLL" Name="hecklib-precalc.dll" Source="bin\Debug\net472\hecklib-precalc.dll" />
+						</Component>
+						<Component Id="HECKLIB_RAWFILES_BRUKER.DLL" DiskId="1" Guid="BCC065DB-3976-48D1-9B8C-C624340C8D4D">
+							<File Id="HECKLIB_RAWFILES_BRUKER.DLL" Name="hecklib-rawfiles-bruker.dll" Source="bin\Debug\net472\hecklib-rawfiles-bruker.dll" />
+						</Component>
+						<Component Id="HECKLIB_RAWFILES_MGF.DLL" DiskId="1" Guid="3D6C57DD-3BD1-42E7-8A99-260573C63296">
+							<File Id="HECKLIB_RAWFILES_MGF.DLL" Name="hecklib-rawfiles-mgf.dll" Source="bin\Debug\net472\hecklib-rawfiles-mgf.dll" />
+						</Component>
+						<Component Id="HECKLIB_RAWFILES_THERMO.DLL" DiskId="1" Guid="3A9EDF3D-FB71-46AB-B9CF-D42410ADFB11">
+							<File Id="HECKLIB_RAWFILES_THERMO.DLL" Name="hecklib-rawfiles-thermo.dll" Source="bin\Debug\net472\hecklib-rawfiles-thermo.dll" />
+						</Component>
+						<Component Id="HECKLIB_RAWFILES.DLL" DiskId="1" Guid="28FE1DD1-003B-486F-8BEC-1A4F141A6CDE">
+							<File Id="HECKLIB_RAWFILES.DLL" Name="hecklib-rawfiles.dll" Source="bin\Debug\net472\hecklib-rawfiles.dll" />
+						</Component>
+						<Component Id="HECKLIB_WIN32.DLL" DiskId="1" Guid="1542B1D3-683B-49DA-BE8F-EE883E24690E">
+							<File Id="HECKLIB_WIN32.DLL" Name="hecklib-win32.dll" Source="bin\Debug\net472\hecklib-win32.dll" />
+						</Component>
+						<Component Id="ITEXTSHARP.DLL" DiskId="1" Guid="B450EDED-9DFD-40E8-87FE-12BF6AB0A9B0">
+							<File Id="ITEXTSHARP.DLL" Name="itextsharp.dll" Source="bin\Debug\net472\itextsharp.dll" />
+						</Component>
+						<Component Id="NEWTONSOFT.JSON.DLL" DiskId="1" Guid="7648667B-4731-4319-8137-74FD84A5EBB2">
+							<File Id="NEWTONSOFT.JSON.DLL" Name="Newtonsoft.Json.dll" Source="bin\Debug\net472\Newtonsoft.Json.dll" />
+						</Component>
+						<Component Id="OBJECTLISTVIEW.DLL" DiskId="1" Guid="A9D47969-A6DB-43F8-A3B0-8159C87CE560">
+							<File Id="OBJECTLISTVIEW.DLL" Name="ObjectListView.dll" Source="bin\Debug\net472\ObjectListView.dll" />
+						</Component>
+						<Component Id="PDFSHARP_WPF.DLL" DiskId="1" Guid="47701DCE-0481-44ED-9F9B-A540E9839080">
+							<File Id="PDFSHARP_WPF.DLL" Name="PdfSharp-WPF.dll" Source="bin\Debug\net472\PdfSharp-WPF.dll" />
+						</Component>
+						<Component Id="PDFSHARP.CHARTING_WPF.DLL" DiskId="1" Guid="4039B332-9DA4-46C3-BB2B-A22E50D7A643">
+							<File Id="PDFSHARP.CHARTING_WPF.DLL" Name="PdfSharp.Charting-wpf.dll" Source="bin\Debug\net472\PdfSharp.Charting-wpf.dll" />
+						</Component>
+						<Component Id="PDFSHARP.CHARTING.DLL" DiskId="1" Guid="AACB4BE7-DD19-48C2-9446-C8F754C7369A">
+							<File Id="PDFSHARP.CHARTING.DLL" Name="PdfSharp.Charting.dll" Source="bin\Debug\net472\PdfSharp.Charting.dll" />
+						</Component>
+						<Component Id="PDFSHARP.DLL" DiskId="1" Guid="AAE0D685-067F-479F-AD8B-5E8C4F43BBAF">
+							<File Id="PDFSHARP.DLL" Name="PdfSharp.dll" Source="bin\Debug\net472\PdfSharp.dll" />
+						</Component>
+						<Component Id="PDFSHARP.XPS.DLL" DiskId="1" Guid="C4971488-1546-48B5-9CF8-39607015C6EE">
+							<File Id="PDFSHARP.XPS.DLL" Name="PdfSharp.Xps.dll" Source="bin\Debug\net472\PdfSharp.Xps.dll" />
+						</Component>
+						<Component Id="SYSTEM.DATA.SQLITE.DLL" DiskId="1" Guid="E2DB95D1-A5F9-4FAB-8BA5-E5C8694DB256">
+							<File Id="SYSTEM.DATA.SQLITE.DLL" Name="System.Data.SQLite.dll" Source="bin\Debug\net472\System.Data.SQLite.dll" />
+						</Component>
+						<Component Id="SYSTEM.DRAWING.COMMON.DLL" DiskId="1" Guid="016883D1-F87C-4402-999F-AD601AA66E6F">
+							<File Id="SYSTEM.DRAWING.COMMON.DLL" Name="System.Drawing.Common.dll" Source="bin\Debug\net472\System.Drawing.Common.dll" />
+						</Component>
+						<Component Id="SYSTEM.IO.PACKAGING.DLL" DiskId="1" Guid="3801423E-99B9-4C60-BEC5-0E7848F50642">
+							<File Id="SYSTEM.IO.PACKAGING.DLL" Name="System.IO.Packaging.dll" Source="bin\Debug\net472\System.IO.Packaging.dll" />
+						</Component>
+						<Component Id="THERMOFISHER.COMMONCORE.BACKGROUNDSUBTRACTION.DLL" DiskId="1" Guid="C3218C6B-C901-4E2D-A398-5F2C2B2E13E9">
+							<File Id="THERMOFISHER.COMMONCORE.BACKGROUNDSUBTRACTION.DLL" Name="ThermoFisher.CommonCore.BackgroundSubtraction.dll" Source="bin\Debug\net472\ThermoFisher.CommonCore.BackgroundSubtraction.dll" />
+						</Component>
+						<Component Id="THERMOFISHER.COMMONCORE.DATA.DLL" DiskId="1" Guid="65F0F75C-9D80-4B5A-829D-8D2C0443594E">
+							<File Id="THERMOFISHER.COMMONCORE.DATA.DLL" Name="ThermoFisher.CommonCore.Data.dll" Source="bin\Debug\net472\ThermoFisher.CommonCore.Data.dll" />
+						</Component>
+						<Component Id="THERMOFISHER.COMMONCORE.MASSPRECISIONESTIMATOR.DLL" DiskId="1" Guid="1F2E6A4B-A1C8-4DEA-91FB-EF7378B3841F">
+							<File Id="THERMOFISHER.COMMONCORE.MASSPRECISIONESTIMATOR.DLL" Name="ThermoFisher.CommonCore.MassPrecisionEstimator.dll" Source="bin\Debug\net472\ThermoFisher.CommonCore.MassPrecisionEstimator.dll" />
+						</Component>
+						<Component Id="THERMOFISHER.COMMONCORE.RAWFILEREADER.DLL" DiskId="1" Guid="C930CBB0-4463-4143-B1FD-1F486AB1A6FF">
+							<File Id="THERMOFISHER.COMMONCORE.RAWFILEREADER.DLL" Name="ThermoFisher.CommonCore.RawFileReader.dll" Source="bin\Debug\net472\ThermoFisher.CommonCore.RawFileReader.dll" />
+						</Component>
+						<Component Id="TIMSDATA.DLL" DiskId="1" Guid="786D56AD-FA40-46A1-917F-A65898C9E85A">
+							<File Id="TIMSDATA.DLL" Name="timsdata.dll" Source="bin\Debug\net472\timsdata.dll" />
+						</Component>
+						<Component Id="ZLIB.NET.DLL" DiskId="1" Guid="37D04BFF-DFF2-4C32-85BC-20AB97682E3E">
+							<File Id="ZLIB.NET.DLL" Name="zlib.net.dll" Source="bin\Debug\net472\zlib.net.dll" />
+						</Component>
+						<Directory Id="DE" Name="de">
+							<Component Id="PDFSHARP_WPF.RESOURCES.DLL" DiskId="1" Guid="1B59D379-2860-4408-B324-280C8A6F0C92">
+								<File Id="PDFSHARP_WPF.RESOURCES.DLL" Name="PdfSharp-wpf.resources.dll" Source="bin\Debug\net472\de\PdfSharp-wpf.resources.dll" />
+							</Component>
+							<Component Id="PDFSHARP.CHARTING_WPF.RESOURCES.DLL" DiskId="1" Guid="94DAE872-C1B5-4DB1-8C95-42488CB03069">
+								<File Id="PDFSHARP.CHARTING_WPF.RESOURCES.DLL" Name="PdfSharp.Charting-wpf.resources.dll" Source="bin\Debug\net472\de\PdfSharp.Charting-wpf.resources.dll" />
+							</Component>
+							<Component Id="PDFSHARP.CHARTING.RESOURCES.DLL" DiskId="1" Guid="D7A8BA12-73B2-4A47-84E8-CD465471C27B">
+								<File Id="PDFSHARP.CHARTING.RESOURCES.DLL" Name="PdfSharp.Charting.resources.dll" Source="bin\Debug\net472\de\PdfSharp.Charting.resources.dll" />
+							</Component>
+							<Component Id="PDFSHARP.RESOURCES.DLL" DiskId="1" Guid="76A84F76-4F1A-45E7-AC9E-5819C3A54E6C">
+								<File Id="PDFSHARP.RESOURCES.DLL" Name="PdfSharp.resources.dll" Source="bin\Debug\net472\de\PdfSharp.resources.dll" />
+							</Component>
+						</Directory>
+						<Directory Id="X64" Name="x64">
+							<Component Id="SQLITE.INTEROP.DLL" DiskId="1" Guid="53260348-3BF1-41EC-9194-9DCB3DA6700C">
+								<File Id="SQLITE.INTEROP.DLL" Name="SQLite.Interop.dll" Source="bin\Debug\net472\x64\SQLite.Interop.dll" />
+							</Component>
+						</Directory>
+						<Directory Id="X86" Name="x86">
+							<Component Id="SQLITE.INTEROP.DLL_1" DiskId="1" Guid="5B26DDE4-90FB-4D8D-B178-E46451C7F824">
+								<File Id="SQLITE.INTEROP.DLL_1" Name="SQLite.Interop.dll" Source="bin\Debug\net472\x86\SQLite.Interop.dll" />
+							</Component>
+						</Directory>
+					</Directory>
+				</Directory>
             </Directory>
             <Directory Id="DesktopFolder" />
             <Directory Id="ProgramMenuFolder">
-                <Directory Id="ProgramMenuDir" Name="Fragment laboratory">
+                <Directory Id="ProgramMenuDir" Name="HeckLib">
                     <Component Id="StartMenuShortcuts" Guid="5D043B60-48A0-4E60-8EEC-7C7E3191D24D">
                         <RemoveFolder Id="ProgramMenuDir" On="uninstall" />
                         <RegistryValue Root="HKCU" Key="Software\[Manufacturer]\[ProductName]" Type="string" Value="" />
