@@ -67,7 +67,7 @@ namespace FragmentLab
 
 			if (extension == "raw")
 			{
-				path = Path.GetDirectoryName(filename);
+				path = FilesA.GetDirectoryName(filename);
 				return new HeckLibRawFileThermo.HeckLibThermoRawFile(filename);
 			}
 			else if (extension == "d")
@@ -82,7 +82,7 @@ namespace FragmentLab
 			}
 			else if (extension == "mgf")
 			{
-				path = Directory.GetParent(FilesA.GetDirectoryName(filename)).FullName;
+				path = FilesA.GetDirectoryName(filename);
 				return new HeckLibRawFileMgf.HeckLibMgfRawFile(filename);
 			}
 			else
@@ -99,7 +99,7 @@ namespace FragmentLab
 
 		public Document(string[] filenames, ImportType type)
 		{
-			m_sPath = Path.GetDirectoryName(filenames[0]);
+			m_sPath = FilesA.GetDirectoryName(filenames[0]);
 
 			// load the psms and sort them on raw-file
 			m_nNumberPsms = 0;
@@ -240,7 +240,7 @@ namespace FragmentLab
 			rawfile.GetMs2TicStatistics(out minTIC, out maxTIC, out meanTIC);
 
 			// get the spectrum
-			precursor = rawfile.GetPrecursorInfo(psm.MinScan);
+			precursor = rawfile.GetPrecursorInfo(rawfile.GetScanNumber(psm.MinScan, psm.ImsIndex));
 
 			scanheader = rawfile.GetScanHeader(psm.MinScan);
 			Centroid[] centroids = rawfile.GetSpectrum(rawfile.GetScanNumber(psm.MinScan, psm.ImsIndex), out noise);
