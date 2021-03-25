@@ -147,13 +147,13 @@ Contributors:
     <EmbeddedResource Include="icons\ubc_logo_retina.ico" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="hecklib-rawfiles-mzxml" Version="1.0.403.737" />
+    <PackageReference Include="hecklib-rawfiles-mzxml" Version="1.0.406.921" />
     <PackageReference Include="hecklib-win32" Version="1.0.165.24499" />
     <PackageReference Include="hecklib.database" Version="1.0.405.26181" />
     <PackageReference Include="hecklib.graphics" Version="1.3.405.26308" />
-    <PackageReference Include="hecklib.rawfiles.bruker" Version="6.0.403.737" />
-    <PackageReference Include="hecklib.rawfiles.mgf" Version="6.0.403.737" />
-    <PackageReference Include="hecklib.rawfiles.thermo" Version="6.0.403.737" />
+    <PackageReference Include="hecklib.rawfiles.bruker" Version="6.0.406.921" />
+    <PackageReference Include="hecklib.rawfiles.mgf" Version="6.0.406.921" />
+    <PackageReference Include="hecklib.rawfiles.thermo" Version="6.0.406.921" />
     <PackageReference Include="LiveCharts.WinForms" Version="0.9.7.1" />
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.112" />
   </ItemGroup>
