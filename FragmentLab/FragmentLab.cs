@@ -20,6 +20,7 @@
 
 // C#
 using System;
+using System.IO;
 using System.Threading;
 using System.Windows.Forms;
 using System.Collections.Generic;
@@ -29,14 +30,19 @@ using HeckLib;
 using HeckLib.masspec;
 using HeckLib.chemistry;
 using HeckLib.backgroundworker;
+using HeckLib.objectlistview;
+
+using hecklib.graphics;
+using hecklib.graphics.editors;
 
 using HeckLib.visualization;
-using HeckLib.objectlistview;
+using hecklib.visualization.propgrid;
 
 using HeckLibWin32;
 
 // object list view
 using BrightIdeasSoftware;
+
 
 
 
@@ -51,6 +57,9 @@ namespace FragmentLab
 		{
 			InitializeComponent();
 
+			// versioning
+			Text = "Fragment LAB (beta) - version " + Application.ProductVersion + "    [© richard scheltema lab]";
+
 			// add the settings
 			settings.SignalToNoise = 1.5;
 			settings.Peptide = null;
@@ -60,9 +69,15 @@ namespace FragmentLab
 			settings.Ms2SpectrumSettings = new Ms2SpectrumGraph.Settings();
 			settings.Ms2SpectrumSettings.MinTopX = 1;
 
+			settings.NumberCores = 4;
 			settings.CombineSpectra = true;
 
 			propertiesSettings.SelectedObject = settings;
+			propertiesSettings.CollapseAllGridItems();
+			propertiesSettings.ExpandGroup("1. Peptide / protein");
+
+			// add event handlers
+			ms2SpectrumGraph1.MouseChartPositionChanged += Ms2SpectrumGraph1_MouseChartPositionChanged;
 
 			// create the columns for the peptide spectrum match selection
 			this.PsmBrowser.SelectedIndexChanged += PsmBrowser_SelectedIndexChanged;
@@ -149,7 +164,7 @@ namespace FragmentLab
 					if (psm == null)
 						return "Unknown";
 					else
-						return psm.FragmentationEnergy;
+						return psm.Proteins;
 				};
 			this.PeptideColumn.FilterMenuBuildStrategy = new StringFilterMenuBuilder();
 			this.PeptideColumn.AspectGetter = delegate (Object obj) {
@@ -193,8 +208,34 @@ namespace FragmentLab
 					if (psm == null)
 						return "Unknown";
 					else
-						return psm.Peptide.GetAnnotatedModifications();
+						return psm.Peptide.GetUniqueModificationsString();
 				};
+
+			// collect events from elements that can alter the sequence
+			this.ms2FragmentTable1.PtmScorePeptideChanged += Ms2FragmentTable1_PtmScorePeptideChanged;
+
+			// create the settings database
+			string dbfile = HeckLibSettings.CreateAppDataFilename(@"hecklib-settings.sqlite", HeckLibSettings.FolderType.RESOURCE);
+			if (!File.Exists(dbfile))
+			{
+				HeckLib.io.database.DatabaseInformation dbinfo = new HeckLib.io.database.DatabaseInformation {
+						Created			= DateTime.Now,
+						FileName		= dbfile,
+						HashCode		= "",
+						LastAccessed	= DateTime.Now
+					};
+				m_pSettingsDb = new HeckLib.io.database.HeckLibSettingsDatabase(dbfile, Modification.Parse(), dbinfo);
+				m_pSettingsDb.Dispose();
+			}
+			m_pSettingsDb = new HeckLib.io.database.HeckLibSettingsDatabase(dbfile);
+			// bit of a workaround for the peptide editor
+			settings.AllModifications = m_pSettingsDb.GetModifications();
+		}
+
+		public new void Dispose()
+		{
+			m_pSettingsDb.Dispose();
+			base.Dispose();
 		}
 		#endregion constructor(s)
 
@@ -203,36 +244,82 @@ namespace FragmentLab
 		private void openToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			OpenFileDialog dlg = new OpenFileDialog();
-			dlg.Filter = "PD PSM Files|*.txt|MQ Evidence Files|*.txt|MQ MsmsScans Files|*.txt|Vendor RAW Files|*.raw;*.tdf;*.mgf";
+			dlg.Filter = "Search Result Files|*.txt;*.tsv;*.csv|PepXML|*.pepXML|mzIdentML|*.mzid|" + HeckLibRawFiles.HeckLibRawFile.FileDialogExtensions;
 			dlg.FilterIndex = 1;
 			dlg.Multiselect = true;
 
 			if (dlg.ShowDialog() == DialogResult.OK)
 			{
 				string[] filenames = dlg.FileNames;
-				Document.ImportType type = Document.ImportType.ERROR;
 
-				if (dlg.FilterIndex == 1) type = Document.ImportType.PD;
-				if (dlg.FilterIndex == 2) type = Document.ImportType.MQ_EVIDENCE;
-				if (dlg.FilterIndex == 3) type = Document.ImportType.MQ_MSMS;
+				Document.ImportType type = Document.ImportType.ERROR;
+				if (dlg.FilterIndex == 1) type = Document.ImportType.GENERIC;
+				if (dlg.FilterIndex == 2) type = Document.ImportType.PEPXML;
+				if (dlg.FilterIndex == 3) type = Document.ImportType.MZIDENTML;
 				if (dlg.FilterIndex == 4) type = Document.ImportType.RAW;
 
 				if (type != Document.ImportType.ERROR)
-					m_pDocument = new Document(dlg.FileNames, type);
+					m_pDocument = new Document(m_pSettingsDb, dlg.FileNames, type, m_pBackgroundWorker);
 
+				// if available, open the spectral predictions
+				if (!string.IsNullOrEmpty(settings.EncyclopeDIA))
+				{
+					Document.BackgroundWorkerData data = new Document.BackgroundWorkerData();
+					data = new Document.BackgroundWorkerData {
+							Filename	= settings.EncyclopeDIA,
+							Settings	= settings,
+							PsmList		= GetCurrentSetOfPsms()
+						};
+					m_pBackgroundWorker.TriggerBackgroundWorker(m_pDocument.LoadSpectralPredictions, data);
+				}
+				
 				// fill the tree
+				Cursor.Current = Cursors.WaitCursor;
 				FillTree();
+				Cursor.Current = Cursors.Default;
+
+				// empty out the visualizationa
+				ms2SpectrumGraph1.Clear();
+				boxPlot1.Clear();
+				ms2FragmentTable1.Clear();
 			}
 		}
 
 		private void FillTree()
 		{
-			PsmBrowser.SetObjects(m_pDocument.GetPsms());
+			List<PeptideSpectrumMatch> filtered_psms = m_pDocument.GetPsms();
+			if (filtered_psms == null)
+			{
+				MessageBox.Show("No PSM entries found.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				return;
+			}
+			PsmBrowser.BeginUpdate();
+			PsmBrowser.SetObjects(filtered_psms);
+			PsmBrowser.EndUpdate();
+			toolNrPsms.Text = "#psms: " + filtered_psms.Count;
 		}
 
 		private void propertiesSettings_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
 		{
-			FillTree();
+			// if available, open the spectral predictions
+			if (string.IsNullOrEmpty(settings.EncyclopeDIA) || !File.Exists(settings.EncyclopeDIA))
+			{
+				m_pDocument.ClearSpectralPredictions();
+				settings.EncyclopeDIA = "";
+			}
+			else
+			{
+				Document.BackgroundWorkerData data = new Document.BackgroundWorkerData();
+				data = new Document.BackgroundWorkerData {
+						Filename	= settings.EncyclopeDIA,
+						Settings	= settings,
+						PsmList		= GetCurrentSetOfPsms()
+					};
+				m_pBackgroundWorker.TriggerBackgroundWorker(m_pDocument.LoadSpectralPredictions, data);
+			}
+
+			// done, trigger repaint
+			PsmBrowser_SelectedIndexChanged(null, null);
 		}
 
 		private void exportMassListsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -250,23 +337,6 @@ namespace FragmentLab
 					PsmList		= GetCurrentSetOfPsms()
 				};
 			m_pBackgroundWorker.TriggerBackgroundWorker(m_pDocument.ExportMassLists, data);
-		}
-
-		private void exportFrequentFlyersToolStripMenuItem_Click(object sender, EventArgs e)
-		{
-			// get a filename
-			SaveFileDialog dlg = new SaveFileDialog();
-			dlg.DefaultExt = "freqflyers";
-			dlg.Filter = "Frequent flyers files (*.freqflyers)|*.freqflyers|All files (*.*)|*.*"; ;
-			if (dlg.ShowDialog() != System.Windows.Forms.DialogResult.OK)
-				return;
-			Document.BackgroundWorkerData data = new Document.BackgroundWorkerData();
-			data = new Document.BackgroundWorkerData {
-					Filename	= dlg.FileName,
-					Settings	= settings,
-					PsmList		= GetCurrentSetOfPsms()
-				};
-			m_pBackgroundWorker.TriggerBackgroundWorker(m_pDocument.ExportFrequentFlyers, data);
 		}
 
 		private void exportPeptidePropertiesToolStripMenuItem_Click(object sender, EventArgs e)
@@ -367,28 +437,164 @@ namespace FragmentLab
 			m_pBackgroundWorker.TriggerBackgroundWorker(m_pDocument.ExportAsMgfFile, data);
 		}
 
+		private void exportPrositToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			// locate the file ouput
+			SaveFileDialog dlg = new SaveFileDialog();
+			dlg.DefaultExt = ".mgf";
+			dlg.Filter = "PROSIT CSV (*.csv)|*.csv";
+			if (dlg.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+				return;
+
+			// trigger the process
+			Document.BackgroundWorkerData data = new Document.BackgroundWorkerData();
+			data = new Document.BackgroundWorkerData {
+					Filename	= dlg.FileName,
+					Settings	= settings,
+					PsmList		= GetCurrentSetOfPsms()
+				};
+			m_pBackgroundWorker.TriggerBackgroundWorker(m_pDocument.ExportProsit, data);
+		}
+
+		private void exportEncyclopeDIAToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			// locate the file ouput
+			SaveFileDialog dlg = new SaveFileDialog();
+			dlg.DefaultExt = ".dlib";
+			dlg.Filter = "EncyclopeDIA (*.dlib)|*.dlib";
+			if (dlg.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+				return;
+
+			// trigger the process
+			Document.BackgroundWorkerData data = new Document.BackgroundWorkerData();
+			data = new Document.BackgroundWorkerData {
+					Filename	= dlg.FileName,
+					Settings	= settings,
+					PsmList		= GetCurrentSetOfPsms()
+				};
+			m_pBackgroundWorker.TriggerBackgroundWorker(m_pDocument.ExportEncyclopeDIA, data);
+		}
+
 		private void PsmBrowser_SelectedIndexChanged(object sender, EventArgs e)
 		{
 			PeptideSpectrumMatch psm = (PeptideSpectrumMatch)PsmBrowser.SelectedObject;
 			if (psm == null)
 				return;
-
 			if (settings.Peptide != null)
 				psm.Peptide = settings.Peptide;
 
+			SetFragmentationSpectrum(psm, false);
+		}
+
+		private void Ms2FragmentTable1_PtmScorePeptideChanged(object sender, SpectrumUtils.PtmScoreInfo e)
+		{
+			PeptideSpectrumMatch psm = (PeptideSpectrumMatch)PsmBrowser.SelectedObject;
+			if (psm == null)
+				return;
+			psm.Peptide = e.Peptide;
+
+			SetFragmentationSpectrum(psm, true);
+		}
+
+		private void Ms2SpectrumGraph1_MouseChartPositionChanged(object sender, EventArgs e)
+		{
+			Ms2SpectrumGraph.MouseChartPositionChangedArgs args = (Ms2SpectrumGraph.MouseChartPositionChangedArgs)e;
+			toolGraphPosition.Text = string.Format("m/z={0:0.00}; intensity={1:0.0e0}", args.X, args.Y);
+		}
+
+		private void frequentflyersToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			dialogs.DialogFrequentFlyers dlg = new dialogs.DialogFrequentFlyers(settings, m_pDocument, GetCurrentSetOfPsms());
+			dlg.ShowDialog();
+		}
+
+		private void fragmentreportToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			dialogs.DialogFragmentReport dlg = new dialogs.DialogFragmentReport(settings, m_pDocument, m_pDocument.GetPsms());
+			dlg.ShowDialog();
+		}
+
+		private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			dialogs.AboutBox dlg = new dialogs.AboutBox();
+			dlg.ShowDialog();
+		}
+
+		private void modificationsToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			ModificationEditor editor = new ModificationEditor(m_pSettingsDb);
+			editor.ShowDialog();
+			// bit of a work-around for the peptide editor
+			settings.AllModifications = m_pSettingsDb.GetModifications();
+		}
+
+		private void fragmentationSettingsToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+
+		}
+
+		private void sequenceCoverageToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			dialogs.DialogSequenceCoverage dlg = new dialogs.DialogSequenceCoverage(settings, m_pDocument, this.GetCurrentSetOfPsms());
+			dlg.ShowDialog();
+		}
+
+		private void testToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			ProteaseEditor dlg = new ProteaseEditor();
+			dlg.ShowDialog();
+		}
+		#endregion events
+
+
+		#region helpers
+		private List<PeptideSpectrumMatch> GetCurrentSetOfPsms()
+		{
+			if (PsmBrowser.FilteredObjects.GetType() == new List<PeptideSpectrumMatch>().GetType())
+				return (List<PeptideSpectrumMatch>)PsmBrowser.FilteredObjects;
+			List<PeptideSpectrumMatch> psms = new List<PeptideSpectrumMatch>();
+			foreach (var psm in PsmBrowser.FilteredObjects)
+				psms.Add((PeptideSpectrumMatch)psm);
+			return psms;
+		}
+
+		private void SetFragmentationSpectrum(PeptideSpectrumMatch psm, bool fragmenttable_event)
+		{
+			if (psm.MinScan == -1)
+			{
+				MessageBox.Show("Missing scannumber information; potentially due to\na match-between-runs id.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				return;
+			}
+			
+			// extract the experimental spectrum
 			int[] topxranks;
 			PeptideFragment.FragmentModel model;
 			INoiseDistribution noise;
 			ScanHeader scanheader;
 			PrecursorInfo precursor;
 			Centroid[] spectrum = m_pDocument.LoadSpectrum(psm, settings, out topxranks, out model, out noise, out precursor, out scanheader);
-
+			if (spectrum == null)
+				return;
 			PeptideFragment[] matches = SpectrumUtils.MatchFragments(psm.Peptide, psm.Charge, spectrum, model);
 
+			// check if spectral predictions are active
+			PeptideFragment[] prediction_matches;
+			Centroid[] prediction_spectrum;
+			m_pDocument.GetSpectralPrediction(psm.Peptide, psm.Charge, out prediction_spectrum, out prediction_matches);
+
+			// supply the visualization with the info
 			model.tolerance = settings.MatchTolerance;
 			ms2SpectrumGraph1.SetSpectrum(spectrum, topxranks, psm, model, settings.Ms2SpectrumSettings, noiseband: noise);
 
-			ms2FragmentTable1.SetPeptide(psm.Peptide, spectrum, matches, model, psm.Charge);
+			if (prediction_spectrum != null)
+			{
+				prediction_matches = SpectrumUtils.MatchFragments(psm.Peptide, psm.Charge, prediction_spectrum, model);
+				ms2SpectrumGraph1.SetMirrorSpectrum(prediction_spectrum, prediction_matches, model, settings.Ms2SpectrumSettings);
+			}
+			else
+				ms2SpectrumGraph1.SetMirrorSpectrum(null, null, model, settings.Ms2SpectrumSettings);
+
+			ms2FragmentTable1.SetPeptide(psm.Peptide, precursor, spectrum, topxranks, matches, model, psm.Charge, !fragmenttable_event);
 
 			// set the intensities for the different classes of fragments
 			Dictionary<int, List<double>> iontypeintensities = new Dictionary<int, List<double>>();
@@ -410,42 +616,6 @@ namespace FragmentLab
 				boxPlot1.AddClass(PeptideFragment.IonToString(iontype), iontypeintensities[iontype].ToArray(), PeptideFragmentVisualUtilities.GetFragmentColor(iontype, PeptideFragment.MASSSHIFT_NONE));
 			}
 			boxPlot1.Invalidate();
-		}
-
-		private void extractMgfMetaInfo_Click(object sender, EventArgs e)
-		{
-			OpenFileDialog dlgOpen = new OpenFileDialog();
-			dlgOpen.DefaultExt = "MGF";
-			dlgOpen.Filter = "Mascot Generic Format (*.mgf)|*.mgf|All files (*.*)|*.*"; ;
-			if (dlgOpen.ShowDialog() != System.Windows.Forms.DialogResult.OK)
-				return;
-
-			SaveFileDialog dlgSave = new SaveFileDialog();
-			dlgSave.DefaultExt = "MGFMeta";
-			dlgSave.Filter = "MGF meta (*.mgfmeta)|*.mgfmeta|All files (*.*)|*.*"; ;
-			if (dlgSave.ShowDialog() != System.Windows.Forms.DialogResult.OK)
-				return;
-
-			Document.BackgroundWorkerData data = new Document.BackgroundWorkerData();
-			data = new Document.BackgroundWorkerData {
-					Filename	= dlgOpen.FileName + "\t" + dlgSave.FileName,
-					Settings	= null,
-					PsmList		= null
-				};
-			m_pBackgroundWorker.TriggerBackgroundWorker(m_pDocument.ConvertMgfToMeta, data);
-		}
-		#endregion events
-
-
-		#region helpers
-		private List<PeptideSpectrumMatch> GetCurrentSetOfPsms()
-		{
-			if (PsmBrowser.FilteredObjects.GetType() == new List<PeptideSpectrumMatch>().GetType())
-				return (List<PeptideSpectrumMatch>)PsmBrowser.FilteredObjects;
-			List<PeptideSpectrumMatch> psms = new List<PeptideSpectrumMatch>();
-			foreach (var psm in PsmBrowser.FilteredObjects)
-				psms.Add((PeptideSpectrumMatch)psm);
-			return psms;
 		}
 		#endregion
 
@@ -482,6 +652,8 @@ namespace FragmentLab
 					ScanHeader scanheader;
 					PrecursorInfo precursor;
 					Centroid[] spectrum = m_pDocument.LoadSpectrum(psm, settings, out topxranks, out model, out noise, out precursor, out scanheader);
+					if (spectrum == null)
+						continue;
 
 					currentSpectrum = new Ms2SpectrumGraph();
 					model.tolerance = settings.MatchTolerance;
@@ -495,7 +667,10 @@ namespace FragmentLab
 
 
 		#region data
-		private Document m_pDocument = new Document();
+		private HeckLib.io.database.HeckLibSettingsDatabase m_pSettingsDb;
+
+		private Document m_pDocument = new Document(null);
+
 		private FragmentLabSettings settings = new FragmentLabSettings();
 		private Ms2SpectrumGraph currentSpectrum;
 		private HlBackgroundWorker<Document.BackgroundWorkerData> m_pBackgroundWorker = new HlBackgroundWorker<Document.BackgroundWorkerData>();

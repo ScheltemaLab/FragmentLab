@@ -55,6 +55,9 @@
 			this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
 			this.ms2FragmentTable1 = new HeckLib.visualization.Ms2FragmentTable();
 			this.boxPlot1 = new HeckLib.visualization.graphs.BoxPlot();
+			this.statusStrip1 = new System.Windows.Forms.StatusStrip();
+			this.toolNrPsms = new System.Windows.Forms.ToolStripStatusLabel();
+			this.toolGraphPosition = new System.Windows.Forms.ToolStripStatusLabel();
 			this.menuStrip1 = new System.Windows.Forms.MenuStrip();
 			this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -62,18 +65,26 @@
 			this.exportGlycoScoresToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
 			this.exportFragmentReportToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
-			this.exportFrequentFlyersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.exportPeptidePropertiesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
 			this.exportMassListsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.exportMGFToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.exportPDFToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
-			this.convertToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
+			this.exportPToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.exportEncyclopeDIAToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
 			this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.modificationsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.fragmentationSettingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.analyzeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.frequentflyersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.sequenceCoverageToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.aboytToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.mscoreToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-			this.extractMgfMetaInfo = new System.Windows.Forms.ToolStripMenuItem();
 			((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
 			this.splitContainer1.Panel1.SuspendLayout();
 			this.splitContainer1.Panel2.SuspendLayout();
@@ -88,6 +99,7 @@
 			this.splitcontainerGraphs.Panel2.SuspendLayout();
 			this.splitcontainerGraphs.SuspendLayout();
 			this.tableLayoutPanel2.SuspendLayout();
+			this.statusStrip1.SuspendLayout();
 			this.menuStrip1.SuspendLayout();
 			this.tableLayoutPanel1.SuspendLayout();
 			this.SuspendLayout();
@@ -105,8 +117,8 @@
 			// splitContainer1.Panel2
 			// 
 			this.splitContainer1.Panel2.Controls.Add(this.splitcontainerGraphs);
-			this.splitContainer1.Size = new System.Drawing.Size(1354, 712);
-			this.splitContainer1.SplitterDistance = 351;
+			this.splitContainer1.Size = new System.Drawing.Size(1354, 688);
+			this.splitContainer1.SplitterDistance = 350;
 			this.splitContainer1.TabIndex = 1;
 			// 
 			// splitContainer2
@@ -123,18 +135,17 @@
 			// splitContainer2.Panel2
 			// 
 			this.splitContainer2.Panel2.Controls.Add(this.PsmBrowser);
-			this.splitContainer2.Size = new System.Drawing.Size(351, 712);
-			this.splitContainer2.SplitterDistance = 228;
+			this.splitContainer2.Size = new System.Drawing.Size(350, 688);
+			this.splitContainer2.SplitterDistance = 253;
 			this.splitContainer2.TabIndex = 2;
 			// 
 			// propertiesSettings
 			// 
 			this.propertiesSettings.CategoryForeColor = System.Drawing.SystemColors.InactiveCaptionText;
 			this.propertiesSettings.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.propertiesSettings.HelpVisible = false;
 			this.propertiesSettings.Location = new System.Drawing.Point(0, 0);
 			this.propertiesSettings.Name = "propertiesSettings";
-			this.propertiesSettings.Size = new System.Drawing.Size(351, 228);
+			this.propertiesSettings.Size = new System.Drawing.Size(350, 253);
 			this.propertiesSettings.TabIndex = 0;
 			this.propertiesSettings.ToolbarVisible = false;
 			this.propertiesSettings.PropertyValueChanged += new System.Windows.Forms.PropertyValueChangedEventHandler(this.propertiesSettings_PropertyValueChanged);
@@ -143,39 +154,43 @@
 			// 
 			this.PsmBrowser.AllColumns.Add(this.PeptideColumn);
 			this.PsmBrowser.AllColumns.Add(this.ModificationsColumn);
-			this.PsmBrowser.AllColumns.Add(this.ChargeColumn);
+			this.PsmBrowser.AllColumns.Add(this.ProteinsColumn);
+			this.PsmBrowser.AllColumns.Add(this.ScoreColumn);
 			this.PsmBrowser.AllColumns.Add(this.MzColumn);
-			this.PsmBrowser.AllColumns.Add(this.FragmentationColumn);
-			this.PsmBrowser.AllColumns.Add(this.RetentionTimeColumn);
-			this.PsmBrowser.AllColumns.Add(this.RawFileColumn);
+			this.PsmBrowser.AllColumns.Add(this.ChargeColumn);
 			this.PsmBrowser.AllColumns.Add(this.MinScanColumn);
 			this.PsmBrowser.AllColumns.Add(this.MaxScanColumn);
+			this.PsmBrowser.AllColumns.Add(this.RetentionTimeColumn);
 			this.PsmBrowser.AllColumns.Add(this.RetentionLengthColumn);
+			this.PsmBrowser.AllColumns.Add(this.RawFileColumn);
+			this.PsmBrowser.AllColumns.Add(this.FragmentationColumn);
 			this.PsmBrowser.AllColumns.Add(this.FragmentationEnergyColumn);
 			this.PsmBrowser.AllColumns.Add(this.DescriptionColumn);
-			this.PsmBrowser.AllColumns.Add(this.ProteinsColumn);
 			this.PsmBrowser.AllColumns.Add(this.IntensityColumn);
 			this.PsmBrowser.AllColumns.Add(this.ModProbColumn);
-			this.PsmBrowser.AllColumns.Add(this.ScoreColumn);
 			this.PsmBrowser.AllColumns.Add(this.DeltaScoreColumn);
 			this.PsmBrowser.CellEditUseWholeCell = false;
 			this.PsmBrowser.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.PeptideColumn,
             this.ModificationsColumn,
-            this.ChargeColumn,
+            this.ProteinsColumn,
+            this.ScoreColumn,
             this.MzColumn,
-            this.FragmentationColumn,
+            this.ChargeColumn,
+            this.MinScanColumn,
             this.RetentionTimeColumn,
             this.RawFileColumn,
-            this.MinScanColumn});
+            this.FragmentationColumn});
 			this.PsmBrowser.Cursor = System.Windows.Forms.Cursors.Default;
 			this.PsmBrowser.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.PsmBrowser.FullRowSelect = true;
 			this.PsmBrowser.GridLines = true;
+			this.PsmBrowser.HideSelection = false;
 			this.PsmBrowser.Location = new System.Drawing.Point(0, 0);
+			this.PsmBrowser.MultiSelect = false;
 			this.PsmBrowser.Name = "PsmBrowser";
 			this.PsmBrowser.ShowGroups = false;
-			this.PsmBrowser.Size = new System.Drawing.Size(351, 480);
+			this.PsmBrowser.Size = new System.Drawing.Size(350, 431);
 			this.PsmBrowser.TabIndex = 0;
 			this.PsmBrowser.UseCompatibleStateImageBehavior = false;
 			this.PsmBrowser.UseFiltering = true;
@@ -184,10 +199,12 @@
 			// PeptideColumn
 			// 
 			this.PeptideColumn.Text = "Peptide";
+			this.PeptideColumn.Width = 137;
 			// 
 			// ModificationsColumn
 			// 
 			this.ModificationsColumn.Text = "Modifications";
+			this.ModificationsColumn.Width = 85;
 			// 
 			// ChargeColumn
 			// 
@@ -240,8 +257,6 @@
 			// 
 			// ProteinsColumn
 			// 
-			this.ProteinsColumn.DisplayIndex = 8;
-			this.ProteinsColumn.IsVisible = false;
 			this.ProteinsColumn.Text = "Proteins";
 			// 
 			// IntensityColumn
@@ -258,8 +273,6 @@
 			// 
 			// ScoreColumn
 			// 
-			this.ScoreColumn.DisplayIndex = 14;
-			this.ScoreColumn.IsVisible = false;
 			this.ScoreColumn.Text = "Score";
 			// 
 			// DeltaScoreColumn
@@ -282,8 +295,8 @@
 			// splitcontainerGraphs.Panel2
 			// 
 			this.splitcontainerGraphs.Panel2.Controls.Add(this.tableLayoutPanel2);
-			this.splitcontainerGraphs.Size = new System.Drawing.Size(999, 712);
-			this.splitcontainerGraphs.SplitterDistance = 502;
+			this.splitcontainerGraphs.Size = new System.Drawing.Size(1000, 688);
+			this.splitcontainerGraphs.SplitterDistance = 483;
 			this.splitcontainerGraphs.TabIndex = 1;
 			// 
 			// ms2SpectrumGraph1
@@ -295,7 +308,7 @@
 			this.ms2SpectrumGraph1.Margin = new System.Windows.Forms.Padding(0);
 			this.ms2SpectrumGraph1.Name = "ms2SpectrumGraph1";
 			this.ms2SpectrumGraph1.SequenceVisible = true;
-			this.ms2SpectrumGraph1.Size = new System.Drawing.Size(999, 502);
+			this.ms2SpectrumGraph1.Size = new System.Drawing.Size(1000, 483);
 			this.ms2SpectrumGraph1.TabIndex = 0;
 			// 
 			// tableLayoutPanel2
@@ -310,16 +323,16 @@
 			this.tableLayoutPanel2.Name = "tableLayoutPanel2";
 			this.tableLayoutPanel2.RowCount = 1;
 			this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-			this.tableLayoutPanel2.Size = new System.Drawing.Size(999, 206);
+			this.tableLayoutPanel2.Size = new System.Drawing.Size(1000, 201);
 			this.tableLayoutPanel2.TabIndex = 0;
 			// 
 			// ms2FragmentTable1
 			// 
 			this.ms2FragmentTable1.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.ms2FragmentTable1.Location = new System.Drawing.Point(294, 3);
+			this.ms2FragmentTable1.Location = new System.Drawing.Point(295, 3);
 			this.ms2FragmentTable1.Margin = new System.Windows.Forms.Padding(3, 3, 3, 0);
 			this.ms2FragmentTable1.Name = "ms2FragmentTable1";
-			this.ms2FragmentTable1.Size = new System.Drawing.Size(702, 203);
+			this.ms2FragmentTable1.Size = new System.Drawing.Size(702, 198);
 			this.ms2FragmentTable1.TabIndex = 0;
 			// 
 			// boxPlot1
@@ -332,14 +345,47 @@
 			this.boxPlot1.Name = "boxPlot1";
 			this.boxPlot1.ShowAverage = true;
 			this.boxPlot1.ShowLog10Scale = false;
-			this.boxPlot1.Size = new System.Drawing.Size(288, 203);
+			this.boxPlot1.Size = new System.Drawing.Size(289, 198);
 			this.boxPlot1.TabIndex = 1;
 			this.boxPlot1.Title = "Intensity [au]";
+			// 
+			// statusStrip1
+			// 
+			this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolNrPsms,
+            this.toolGraphPosition});
+			this.statusStrip1.Location = new System.Drawing.Point(0, 718);
+			this.statusStrip1.Name = "statusStrip1";
+			this.statusStrip1.Size = new System.Drawing.Size(1360, 24);
+			this.statusStrip1.TabIndex = 4;
+			this.statusStrip1.Text = "statusStrip1";
+			// 
+			// toolNrPsms
+			// 
+			this.toolNrPsms.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Top) 
+            | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right) 
+            | System.Windows.Forms.ToolStripStatusLabelBorderSides.Bottom)));
+			this.toolNrPsms.Name = "toolNrPsms";
+			this.toolNrPsms.Size = new System.Drawing.Size(66, 19);
+			this.toolNrPsms.Text = "#psms = 0";
+			// 
+			// toolGraphPosition
+			// 
+			this.toolGraphPosition.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Top) 
+            | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right) 
+            | System.Windows.Forms.ToolStripStatusLabelBorderSides.Bottom)));
+			this.toolGraphPosition.Name = "toolGraphPosition";
+			this.toolGraphPosition.Size = new System.Drawing.Size(153, 19);
+			this.toolGraphPosition.Text = "m/z=0.0e0; intensity=0.0e0";
+			this.toolGraphPosition.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
 			// 
 			// menuStrip1
 			// 
 			this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.fileToolStripMenuItem});
+            this.fileToolStripMenuItem,
+            this.editToolStripMenuItem,
+            this.analyzeToolStripMenuItem,
+            this.helpToolStripMenuItem});
 			this.menuStrip1.Location = new System.Drawing.Point(0, 0);
 			this.menuStrip1.Name = "menuStrip1";
 			this.menuStrip1.Size = new System.Drawing.Size(1360, 24);
@@ -351,7 +397,6 @@
 			this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.openToolStripMenuItem,
             this.exportToolStripMenuItem,
-            this.convertToolStripMenuItem,
             this.toolStripSeparator1,
             this.exitToolStripMenuItem});
 			this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
@@ -361,7 +406,7 @@
 			// openToolStripMenuItem
 			// 
 			this.openToolStripMenuItem.Name = "openToolStripMenuItem";
-			this.openToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+			this.openToolStripMenuItem.Size = new System.Drawing.Size(112, 22);
 			this.openToolStripMenuItem.Text = "&Open...";
 			this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
 			// 
@@ -371,94 +416,162 @@
             this.exportGlycoScoresToolStripMenuItem,
             this.toolStripSeparator2,
             this.exportFragmentReportToolStripMenuItem1,
-            this.exportFrequentFlyersToolStripMenuItem,
             this.exportPeptidePropertiesToolStripMenuItem,
             this.toolStripSeparator3,
             this.exportMassListsToolStripMenuItem,
             this.exportMGFToolStripMenuItem,
-            this.exportPDFToolStripMenuItem1});
+            this.exportPDFToolStripMenuItem1,
+            this.toolStripSeparator4,
+            this.exportPToolStripMenuItem,
+            this.exportEncyclopeDIAToolStripMenuItem});
 			this.exportToolStripMenuItem.Name = "exportToolStripMenuItem";
-			this.exportToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+			this.exportToolStripMenuItem.Size = new System.Drawing.Size(112, 22);
 			this.exportToolStripMenuItem.Text = "Export";
 			// 
 			// exportGlycoScoresToolStripMenuItem
 			// 
 			this.exportGlycoScoresToolStripMenuItem.Name = "exportGlycoScoresToolStripMenuItem";
-			this.exportGlycoScoresToolStripMenuItem.Size = new System.Drawing.Size(218, 22);
+			this.exportGlycoScoresToolStripMenuItem.Size = new System.Drawing.Size(219, 22);
 			this.exportGlycoScoresToolStripMenuItem.Text = "Export glyco scores ...";
 			this.exportGlycoScoresToolStripMenuItem.Click += new System.EventHandler(this.exportGlycoScoresToolStripMenuItem_Click);
 			// 
 			// toolStripSeparator2
 			// 
 			this.toolStripSeparator2.Name = "toolStripSeparator2";
-			this.toolStripSeparator2.Size = new System.Drawing.Size(215, 6);
+			this.toolStripSeparator2.Size = new System.Drawing.Size(216, 6);
 			// 
 			// exportFragmentReportToolStripMenuItem1
 			// 
 			this.exportFragmentReportToolStripMenuItem1.Name = "exportFragmentReportToolStripMenuItem1";
-			this.exportFragmentReportToolStripMenuItem1.Size = new System.Drawing.Size(218, 22);
+			this.exportFragmentReportToolStripMenuItem1.Size = new System.Drawing.Size(219, 22);
 			this.exportFragmentReportToolStripMenuItem1.Text = "Export fragment report ...";
 			this.exportFragmentReportToolStripMenuItem1.Click += new System.EventHandler(this.exportFragmentReportToolStripMenuItem1_Click);
-			// 
-			// exportFrequentFlyersToolStripMenuItem
-			// 
-			this.exportFrequentFlyersToolStripMenuItem.Name = "exportFrequentFlyersToolStripMenuItem";
-			this.exportFrequentFlyersToolStripMenuItem.Size = new System.Drawing.Size(218, 22);
-			this.exportFrequentFlyersToolStripMenuItem.Text = "Export frequent flyers ...";
-			this.exportFrequentFlyersToolStripMenuItem.Click += new System.EventHandler(this.exportFrequentFlyersToolStripMenuItem_Click);
 			// 
 			// exportPeptidePropertiesToolStripMenuItem
 			// 
 			this.exportPeptidePropertiesToolStripMenuItem.Name = "exportPeptidePropertiesToolStripMenuItem";
-			this.exportPeptidePropertiesToolStripMenuItem.Size = new System.Drawing.Size(218, 22);
+			this.exportPeptidePropertiesToolStripMenuItem.Size = new System.Drawing.Size(219, 22);
 			this.exportPeptidePropertiesToolStripMenuItem.Text = "Export peptide properties ...";
 			this.exportPeptidePropertiesToolStripMenuItem.Click += new System.EventHandler(this.exportPeptidePropertiesToolStripMenuItem_Click);
 			// 
 			// toolStripSeparator3
 			// 
 			this.toolStripSeparator3.Name = "toolStripSeparator3";
-			this.toolStripSeparator3.Size = new System.Drawing.Size(215, 6);
+			this.toolStripSeparator3.Size = new System.Drawing.Size(216, 6);
 			// 
 			// exportMassListsToolStripMenuItem
 			// 
 			this.exportMassListsToolStripMenuItem.Name = "exportMassListsToolStripMenuItem";
-			this.exportMassListsToolStripMenuItem.Size = new System.Drawing.Size(218, 22);
+			this.exportMassListsToolStripMenuItem.Size = new System.Drawing.Size(219, 22);
 			this.exportMassListsToolStripMenuItem.Text = "Export mass lists ...";
 			this.exportMassListsToolStripMenuItem.Click += new System.EventHandler(this.exportMassListsToolStripMenuItem_Click);
 			// 
 			// exportMGFToolStripMenuItem
 			// 
 			this.exportMGFToolStripMenuItem.Name = "exportMGFToolStripMenuItem";
-			this.exportMGFToolStripMenuItem.Size = new System.Drawing.Size(218, 22);
+			this.exportMGFToolStripMenuItem.Size = new System.Drawing.Size(219, 22);
 			this.exportMGFToolStripMenuItem.Text = "Export MGF ...";
 			this.exportMGFToolStripMenuItem.Click += new System.EventHandler(this.exportMGFToolStripMenuItem_Click);
 			// 
 			// exportPDFToolStripMenuItem1
 			// 
 			this.exportPDFToolStripMenuItem1.Name = "exportPDFToolStripMenuItem1";
-			this.exportPDFToolStripMenuItem1.Size = new System.Drawing.Size(218, 22);
-			this.exportPDFToolStripMenuItem1.Text = "Export PDF...";
+			this.exportPDFToolStripMenuItem1.Size = new System.Drawing.Size(219, 22);
+			this.exportPDFToolStripMenuItem1.Text = "Export PDF ...";
 			this.exportPDFToolStripMenuItem1.Click += new System.EventHandler(this.exportPDFToolStripMenuItem1_Click);
 			// 
-			// convertToolStripMenuItem
+			// toolStripSeparator4
 			// 
-			this.convertToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.extractMgfMetaInfo});
-			this.convertToolStripMenuItem.Name = "convertToolStripMenuItem";
-			this.convertToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-			this.convertToolStripMenuItem.Text = "Extract";
+			this.toolStripSeparator4.Name = "toolStripSeparator4";
+			this.toolStripSeparator4.Size = new System.Drawing.Size(216, 6);
+			// 
+			// exportPToolStripMenuItem
+			// 
+			this.exportPToolStripMenuItem.Name = "exportPToolStripMenuItem";
+			this.exportPToolStripMenuItem.Size = new System.Drawing.Size(219, 22);
+			this.exportPToolStripMenuItem.Text = "Export Prosit ...";
+			this.exportPToolStripMenuItem.Click += new System.EventHandler(this.exportPrositToolStripMenuItem_Click);
+			// 
+			// exportEncyclopeDIAToolStripMenuItem
+			// 
+			this.exportEncyclopeDIAToolStripMenuItem.Name = "exportEncyclopeDIAToolStripMenuItem";
+			this.exportEncyclopeDIAToolStripMenuItem.Size = new System.Drawing.Size(219, 22);
+			this.exportEncyclopeDIAToolStripMenuItem.Text = "Export EncyclopeDIA ...";
+			this.exportEncyclopeDIAToolStripMenuItem.Click += new System.EventHandler(this.exportEncyclopeDIAToolStripMenuItem_Click);
 			// 
 			// toolStripSeparator1
 			// 
 			this.toolStripSeparator1.Name = "toolStripSeparator1";
-			this.toolStripSeparator1.Size = new System.Drawing.Size(177, 6);
+			this.toolStripSeparator1.Size = new System.Drawing.Size(109, 6);
 			// 
 			// exitToolStripMenuItem
 			// 
 			this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-			this.exitToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+			this.exitToolStripMenuItem.Size = new System.Drawing.Size(112, 22);
 			this.exitToolStripMenuItem.Text = "&Exit";
 			this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
+			// 
+			// editToolStripMenuItem
+			// 
+			this.editToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.modificationsToolStripMenuItem,
+            this.fragmentationSettingsToolStripMenuItem});
+			this.editToolStripMenuItem.Name = "editToolStripMenuItem";
+			this.editToolStripMenuItem.Size = new System.Drawing.Size(39, 20);
+			this.editToolStripMenuItem.Text = "&Edit";
+			// 
+			// modificationsToolStripMenuItem
+			// 
+			this.modificationsToolStripMenuItem.Name = "modificationsToolStripMenuItem";
+			this.modificationsToolStripMenuItem.Size = new System.Drawing.Size(196, 22);
+			this.modificationsToolStripMenuItem.Text = "&Modifications";
+			this.modificationsToolStripMenuItem.Click += new System.EventHandler(this.modificationsToolStripMenuItem_Click);
+			// 
+			// fragmentationSettingsToolStripMenuItem
+			// 
+			this.fragmentationSettingsToolStripMenuItem.Enabled = false;
+			this.fragmentationSettingsToolStripMenuItem.Name = "fragmentationSettingsToolStripMenuItem";
+			this.fragmentationSettingsToolStripMenuItem.Size = new System.Drawing.Size(196, 22);
+			this.fragmentationSettingsToolStripMenuItem.Text = "&Fragmentation settings";
+			this.fragmentationSettingsToolStripMenuItem.Click += new System.EventHandler(this.fragmentationSettingsToolStripMenuItem_Click);
+			// 
+			// analyzeToolStripMenuItem
+			// 
+			this.analyzeToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.frequentflyersToolStripMenuItem,
+            this.sequenceCoverageToolStripMenuItem});
+			this.analyzeToolStripMenuItem.Name = "analyzeToolStripMenuItem";
+			this.analyzeToolStripMenuItem.Size = new System.Drawing.Size(60, 20);
+			this.analyzeToolStripMenuItem.Text = "&Analyze";
+			// 
+			// frequentflyersToolStripMenuItem
+			// 
+			this.frequentflyersToolStripMenuItem.Name = "frequentflyersToolStripMenuItem";
+			this.frequentflyersToolStripMenuItem.Size = new System.Drawing.Size(176, 22);
+			this.frequentflyersToolStripMenuItem.Text = "Frequent &flyers";
+			this.frequentflyersToolStripMenuItem.Click += new System.EventHandler(this.frequentflyersToolStripMenuItem_Click);
+			// 
+			// sequenceCoverageToolStripMenuItem
+			// 
+			this.sequenceCoverageToolStripMenuItem.Name = "sequenceCoverageToolStripMenuItem";
+			this.sequenceCoverageToolStripMenuItem.Size = new System.Drawing.Size(176, 22);
+			this.sequenceCoverageToolStripMenuItem.Text = "&Sequence coverage";
+			this.sequenceCoverageToolStripMenuItem.Click += new System.EventHandler(this.sequenceCoverageToolStripMenuItem_Click);
+			// 
+			// helpToolStripMenuItem
+			// 
+			this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.aboytToolStripMenuItem});
+			this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
+			this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
+			this.helpToolStripMenuItem.Text = "&Help";
+			// 
+			// aboytToolStripMenuItem
+			// 
+			this.aboytToolStripMenuItem.Name = "aboytToolStripMenuItem";
+			this.aboytToolStripMenuItem.Size = new System.Drawing.Size(107, 22);
+			this.aboytToolStripMenuItem.Text = "&About";
+			this.aboytToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
 			// 
 			// mscoreToolStripMenuItem
 			// 
@@ -475,15 +588,8 @@
 			this.tableLayoutPanel1.Name = "tableLayoutPanel1";
 			this.tableLayoutPanel1.RowCount = 1;
 			this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-			this.tableLayoutPanel1.Size = new System.Drawing.Size(1360, 718);
+			this.tableLayoutPanel1.Size = new System.Drawing.Size(1360, 694);
 			this.tableLayoutPanel1.TabIndex = 3;
-			// 
-			// extractMgfMetaInfo
-			// 
-			this.extractMgfMetaInfo.Name = "extractMgfMetaInfo";
-			this.extractMgfMetaInfo.Size = new System.Drawing.Size(180, 22);
-			this.extractMgfMetaInfo.Text = "MGF meta info";
-			this.extractMgfMetaInfo.Click += new System.EventHandler(this.extractMgfMetaInfo_Click);
 			// 
 			// FragmentLab
 			// 
@@ -491,6 +597,7 @@
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(1360, 742);
 			this.Controls.Add(this.tableLayoutPanel1);
+			this.Controls.Add(this.statusStrip1);
 			this.Controls.Add(this.menuStrip1);
 			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
 			this.MainMenuStrip = this.menuStrip1;
@@ -510,6 +617,8 @@
 			((System.ComponentModel.ISupportInitialize)(this.splitcontainerGraphs)).EndInit();
 			this.splitcontainerGraphs.ResumeLayout(false);
 			this.tableLayoutPanel2.ResumeLayout(false);
+			this.statusStrip1.ResumeLayout(false);
+			this.statusStrip1.PerformLayout();
 			this.menuStrip1.ResumeLayout(false);
 			this.menuStrip1.PerformLayout();
 			this.tableLayoutPanel1.ResumeLayout(false);
@@ -522,6 +631,7 @@
 
 		private HeckLib.visualization.Ms2SpectrumGraph ms2SpectrumGraph1;
 		private System.Windows.Forms.SplitContainer splitContainer1;
+		private System.Windows.Forms.StatusStrip statusStrip1;
 		private System.Windows.Forms.MenuStrip menuStrip1;
 		private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem openToolStripMenuItem;
@@ -533,12 +643,11 @@
 		private System.Windows.Forms.ToolStripMenuItem exportToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem exportPDFToolStripMenuItem1;
 		private System.Windows.Forms.ToolStripMenuItem exportFragmentReportToolStripMenuItem1;
-		private System.Windows.Forms.ToolStripMenuItem exportFrequentFlyersToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem mscoreToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem exportPeptidePropertiesToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem exportMassListsToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem exportGlycoScoresToolStripMenuItem;
-		public BrightIdeasSoftware.ObjectListView PsmBrowser;
+		private BrightIdeasSoftware.ObjectListView PsmBrowser;
 		private HeckLib.visualization.objectlistview.CustomOLVColumn ChargeColumn;
 		private HeckLib.visualization.objectlistview.CustomOLVColumn MzColumn;
 		private HeckLib.visualization.objectlistview.CustomOLVColumn FragmentationColumn;
@@ -563,8 +672,19 @@
 		private HeckLib.visualization.graphs.BoxPlot boxPlot1;
 		private System.Windows.Forms.ToolStripMenuItem exportMGFToolStripMenuItem;
 		private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
-		private System.Windows.Forms.ToolStripMenuItem convertToolStripMenuItem;
-		private System.Windows.Forms.ToolStripMenuItem extractMgfMetaInfo;
+		private System.Windows.Forms.ToolStripStatusLabel toolGraphPosition;
+		private System.Windows.Forms.ToolStripMenuItem analyzeToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem frequentflyersToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem aboytToolStripMenuItem;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
+		private System.Windows.Forms.ToolStripMenuItem exportPToolStripMenuItem;
+		private System.Windows.Forms.ToolStripStatusLabel toolNrPsms;
+		private System.Windows.Forms.ToolStripMenuItem editToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem modificationsToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem fragmentationSettingsToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem exportEncyclopeDIAToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem sequenceCoverageToolStripMenuItem;
 	}
 }
 

@@ -9,3 +9,5 @@ using System.Runtime.InteropServices;
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("d5eb1215-e219-42d5-882a-4861155e241c")]
+
+[assembly: System.Windows.Media.DisableDpiAwareness]

@@ -23,6 +23,9 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 
+using System.Text;
+using System.Text.RegularExpressions;
+
 using System.Windows.Forms;
 using System.Collections.Generic;
 
@@ -31,9 +34,16 @@ using HeckLib;
 using HeckLib.utils;
 using HeckLib.masspec;
 using HeckLib.chemistry;
+using HeckLib.backgroundworker;
 
 using HeckLib.io;
-using HeckLib.io.mascot;
+using HeckLib.io.xml;
+using HeckLib.io.fasta;
+using HeckLib.io.database;
+using HeckLib.io.fileformats;
+
+using hecklib.graphics;
+using hecklib.graphics.csvimport;
 
 
 
@@ -41,13 +51,13 @@ using HeckLib.io.mascot;
 
 namespace FragmentLab
 {
-	public class Document
+	public class Document : IDisposable
 	{
 		public enum ImportType
 		{
-			PD,
-			MQ_EVIDENCE,
-			MQ_MSMS,
+			GENERIC,
+			PEPXML,
+			MZIDENTML,
 			RAW,
 			ERROR
 		}
@@ -57,136 +67,424 @@ namespace FragmentLab
 			public string Filename;
 			public FragmentLabSettings Settings;
 			public List<PeptideSpectrumMatch> PsmList;
+
+			public Dictionary<string, string> ColumnMapping;
+
+			// results
+			public FrequentFlyers FreqFyerResult;
+			public FrequentFlyers.InterpretedData FreqFlyerData;
 		}
 
 
 		#region rawfile access
-		private HeckLibRawFiles.HeckLibRawFile OpenFile(string filename, out string path)
+		private static HeckLibRawFiles.HeckLibRawFile OpenFile(string filename, out string path)
 		{
-			string extension = FilesA.GetFileExtension(filename).ToLower();
+			try
+			{
+				path = FilesA.GetDirectoryName(filename);
 
-			if (extension == "raw")
-			{
-				path = FilesA.GetDirectoryName(filename);
-				return new HeckLibRawFileThermo.HeckLibThermoRawFile(filename);
+				if (File.Exists(filename + ".raw"))
+					return new HeckLibRawFileThermo.HeckLibRawFileThermo(filename + ".raw");
+				else if (File.Exists(filename + ".mgf"))
+					return new HeckLibRawFileMgf.HeckLibMgfRawFile(filename + ".mgf");
+				else if (File.Exists(filename + ".tdf"))
+					return new HeckLibRawFileBruker.HeckLibBrukerRawFile(path);
+				else if (File.Exists(filename + ".mzxml"))
+					return new HeckLibRawFileMzXml.HeckLibMzXmlRawFile(filename + ".mzxml");
+				else if (File.Exists(filename + ".mzml"))
+					return new HeckLibRawFileMzXml.HeckLibMzMlRawFile(filename + ".mzml");
+				else
+					return null;
 			}
-			else if (extension == "d")
+			catch (Exception e)
 			{
-				path = Directory.GetParent(filename).FullName;
-				return new HeckLibRawFileBruker.HeckLibBrukerRawFile(filename);
+				MessageBox.Show(e.Message + "\n" + e.StackTrace);
 			}
-			else if (extension == "tdf")
+			path = "";
+			return null;
+		}
+
+		private bool OpenRawfileStream(PeptideSpectrumMatch psm)
+		{
+			string rawfilename = psm.RawFile;
+			if (rawfilename != m_sCurrentRawFile)
 			{
-				path = Directory.GetParent(FilesA.GetDirectoryName(filename)).FullName;
-				return new HeckLibRawFileBruker.HeckLibBrukerRawFile(Path.GetDirectoryName(filename));
+				if (m_pCurrentRawFile != null)
+					m_pCurrentRawFile.Close();
+
+				m_sCurrentRawFile = rawfilename;
+				string path;
+				m_pCurrentRawFile = OpenFile(rawfilename, out path);
+
+				return m_pCurrentRawFile != null;
 			}
-			else if (extension == "mgf")
+			return true;
+		}
+
+		private static string CreateRawFileName(PeptideSpectrumMatch psm, string path, Dictionary<string, string> filename_cache, out bool cancelall)
+		{
+			cancelall = false;
+			string filename = Path.GetFileNameWithoutExtension(psm.RawFile);
+			if (filename_cache.ContainsKey(filename))
+				return filename_cache[filename];
+
+			string path_mq = Path.GetFullPath(Path.Combine(path, "..\\..\\"));
+			string[] files_mq = Directory.GetFiles(path_mq, filename + ".*", SearchOption.TopDirectoryOnly);
+			string[] files_normal = Directory.GetFiles(path, filename + ".*", SearchOption.TopDirectoryOnly);
+
+			string result = null;
+			if (CorrectExtensionPresent(files_normal))
 			{
-				path = FilesA.GetDirectoryName(filename);
-				return new HeckLibRawFileMgf.HeckLibMgfRawFile(filename);
+				result = Path.Combine(path, filename);
+			}
+			else if (CorrectExtensionPresent(files_mq))
+			{
+				result = Path.Combine(path_mq, filename);
 			}
 			else
-				throw new Exception("unknown extension '" + extension + "'.");
+			{
+				OpenFileDialog dlg = new OpenFileDialog();
+				dlg.Title = "Can't locate raw-file, please select";
+				dlg.Filter = HeckLibRawFiles.HeckLibRawFile.FileDialogExtensions;
+				dlg.FileName = Path.GetFileName(filename);
+
+				DialogResult r = dlg.ShowDialog();
+				if (r == DialogResult.OK)
+					result = Path.Combine(Path.GetDirectoryName(dlg.FileName), Path.GetFileNameWithoutExtension(psm.RawFile));
+				else if (r == DialogResult.Cancel)
+				{
+					if (MessageBox.Show("Do you want to cancel locating other raw-files as well?", "Cancel all?", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+						cancelall = true;
+				}
+			}
+
+			filename_cache[filename] = result;
+			return result;
+		}
+
+		private static bool CorrectExtensionPresent(string[] files)
+		{
+			foreach (string file in files)
+			{
+				string ext = Path.GetExtension(file);
+				foreach (string rext in HeckLibRawFiles.HeckLibRawFile.SupportedExtensions)
+					if (ext.ToLower() == rext.ToLower()) return true;
+			}
+			return false;
 		}
 		#endregion
 
 
 		#region constructor(s)
-		public Document()
+		public Document(HeckLibSettingsDatabase settingsdb)
 		{
-
+			m_pSettingsDatabase = settingsdb;
 		}
 
-		public Document(string[] filenames, ImportType type)
+		public Document(HeckLibSettingsDatabase settingsdb, string[] filenames, ImportType type, HlBackgroundWorker<Document.BackgroundWorkerData> backgroundworker)
 		{
+			m_pSettingsDatabase = settingsdb;
 			m_sPath = FilesA.GetDirectoryName(filenames[0]);
 
 			// load the psms and sort them on raw-file
 			m_nNumberPsms = 0;
 			m_lPsms = new Dictionary<string, List<PeptideSpectrumMatch>>();
 
-			switch (type)
+			Document.BackgroundWorkerData data = new Document.BackgroundWorkerData();
+			foreach (string filename in filenames)
 			{
-				case ImportType.PD:
-					foreach (string filename in filenames)
-					{
-						MascotReader.Parse(filename, m_lModifications, delegate (PeptideSpectrumMatch psm) {
-								if (!m_lPsms.ContainsKey(psm.RawFile))
-									m_lPsms.Add(psm.RawFile, new List<PeptideSpectrumMatch>());
-								m_lPsms[psm.RawFile].Add(psm);
-								m_nNumberPsms++;
-							});
-					}
-					break;
-				case ImportType.MQ_MSMS:
-					foreach (string filename in filenames)
-					{
-						HeckLib.io.maxquant.MsmsScans.Parse(filename, delegate (PeptideSpectrumMatch psm) {
-								psm.RawFile = @"..\..\" + psm.RawFile;
-								if (!m_lPsms.ContainsKey(psm.RawFile))
-									m_lPsms.Add(psm.RawFile, new List<PeptideSpectrumMatch>());
-								m_lPsms[psm.RawFile].Add(psm);
-								m_nNumberPsms++;
-							});
-					}
-					break;
-				case ImportType.MQ_EVIDENCE:
-					foreach (string filename in filenames)
-					{
-						Dictionary<string, Modification> modifications = Modification.Parse("modifications.xml");
-						HeckLib.io.maxquant.EvidenceReader.Parse(filename, modifications, delegate (PeptideSpectrumMatch psm) {
-								// simply choosing HCD
-								psm.Fragmentation = Spectrum.FragmentationType.HCD;
+				switch (type)
+				{
+					case ImportType.GENERIC:
+						CsvImport dlg = new CsvImport();
+						dlg.StartPosition	= FormStartPosition.CenterParent;
+						dlg.FileName		= filename;
+						dlg.FileFormat		= new GenericFileFormat();
+						dlg.AutoMap			= true;
+						if (dlg.ShowDialog() != DialogResult.OK)
+							return;
 
-								if (!m_lPsms.ContainsKey(psm.RawFile))
-									m_lPsms.Add(psm.RawFile, new List<PeptideSpectrumMatch>());
-								m_lPsms[psm.RawFile].Add(psm);
-								m_nNumberPsms++;
-							});
-					}
-					break;
-				case ImportType.RAW:
-					foreach (string filename in filenames)
-					{
-						// open the file, this will overwrite the path which is needed for path-based raw-data (e.g. Bruker)
-						using (HeckLibRawFiles.HeckLibRawFile rawfile = OpenFile(filename, out m_sPath))
-						{
-							for (int scannumber = rawfile.FirstSpectrumNumber(); scannumber <= rawfile.LastSpectrumNumber(); ++scannumber)
-							{
-								ScanHeader header = rawfile.GetScanHeader(scannumber);
-								PrecursorInfo precursor = rawfile.GetPrecursorInfo(scannumber);
-								if (header.ScanType != Spectrum.ScanType.MSn)
-									continue;
+						data = new Document.BackgroundWorkerData {
+								Filename		= filename,
+								Settings		= new FragmentLabSettings(),
+								PsmList			= null,
+								ColumnMapping	= dlg.Mapping
+							};
+						backgroundworker.TriggerBackgroundWorker(LoadGeneric, data);
+						break;
+					case ImportType.PEPXML:
+						data = new Document.BackgroundWorkerData {
+								Filename		= filename,
+								Settings		= new FragmentLabSettings(),
+								PsmList			= null,
+								ColumnMapping	= null
+							};
+						backgroundworker.TriggerBackgroundWorker(LoadPepXML, data);
+						break;
+					case ImportType.MZIDENTML:
+						data = new Document.BackgroundWorkerData {
+								Filename		= filename,
+								Settings		= new FragmentLabSettings(),
+								PsmList			= null,
+								ColumnMapping	= null
+							};
+						backgroundworker.TriggerBackgroundWorker(LoadMzIdentML, data);
+						break;
+					case ImportType.RAW:
+						data = new Document.BackgroundWorkerData {
+								Filename		= filename,
+								Settings		= new FragmentLabSettings(),
+								PsmList			= null,
+								ColumnMapping	= null
+							};
+						backgroundworker.TriggerBackgroundWorker(LoadRawFile, data);
+						break;
+					default:
+						MessageBox.Show("This filter is not yet supported :)", "Error");
+						return;
+				}
+			}
 
-								PeptideSpectrumMatch psm = new PeptideSpectrumMatch {
-										MinScan				= header.ScanNumber,
-										MaxScan				= header.ScanNumber,
-										ImsIndex			= header.IonMobilityIndex,
-										Fragmentation		= precursor.Fragmentation,
-										RetentionTime		= (float)precursor.RetentionTime,
-										RawFile				= header.RawFile,
-										Mz					= precursor.Mz,
-										Charge				= (short)precursor.Charge,
-										Mobility			= precursor.Mobility,
-										Intensity			= precursor.Intensity,
-										Peptide				= new Peptide("")
-									};
-								if (!m_lPsms.ContainsKey(psm.RawFile))
-									m_lPsms.Add(psm.RawFile, new List<PeptideSpectrumMatch>());
-								m_lPsms[psm.RawFile].Add(psm);
-								m_nNumberPsms++;
-							}
-						}
-					}
+			// deferred localisation of raw-files to have the ability to start a file-dialog
+			bool cancelall = false;
+			Dictionary<string, string> rawfilenames = new Dictionary<string, string>();
+			foreach (string key in m_lPsms.Keys)
+			{
+				foreach (PeptideSpectrumMatch psm in m_lPsms[key])
+				{
+					psm.RawFile = CreateRawFileName(psm, m_sPath, rawfilenames, out cancelall);
+					if (cancelall)
+						break;
+				}
+				if (cancelall)
 					break;
-				default:
-					MessageBox.Show("This filter is not yet supported :)", "Error");
-					return;
 			}
 
 			// order the psms on scannumber
 			foreach (string rawfile in m_lPsms.Keys)
 				m_lPsms[rawfile].Sort((a, b) => a.MinScan.CompareTo(b.MinScan));
+		}
+
+		private void LoadGeneric(BackgroundWorkerData data, IProgress<int> progress, CancellationToken iscancelled)
+		{
+			try
+			{
+				GenericFileFormat.Format format = GenericFileFormat.Format.UNKNOWN;
+
+				Dictionary<string, Modification> modifications = m_pSettingsDatabase.GetModifications();
+				CsvFileReader<GenericFileFormat>.Parse(data.Filename, delegate (GenericFileFormat record, double preogress) {
+						progress.Report((int) Math.Floor(100 * preogress));
+					
+						Peptide peptide = GenericFileFormat.CreatePeptide(record, modifications, format, out format);
+						if (peptide.Length != peptide.Modifications.Length)
+							GenericFileFormat.CreatePeptide(record, modifications, format, out format);
+
+						float energy = 0;
+						float.TryParse(record.FragmentationEnergy, out energy);
+						PeptideSpectrumMatch psm = new PeptideSpectrumMatch {
+								MinScan				= record.ScanNumber,
+								MaxScan				= record.ScanNumber,
+								Fragmentation		= Spectrum.TranslateFragmentation(record.FragmentationType),
+								FragmentationEnergy	= energy,
+								RetentionTime		= record.RetentionTime,
+								RawFile				= record.SpectrumFile,
+								Mz					= record.Mz,
+								Charge				= record.Charge,
+								Peptide				= peptide,
+								Score				= record.Score,
+								Proteins			= record.Proteins
+							};
+								
+						if (!m_lPsms.ContainsKey(psm.RawFile))
+							m_lPsms.Add(psm.RawFile, new List<PeptideSpectrumMatch>());
+						m_lPsms[psm.RawFile].Add(psm);
+						m_nNumberPsms++;
+					}, false, data.ColumnMapping);
+			}
+			catch (IOException e)
+			{
+				System.Diagnostics.Debug.WriteLine(e.Message);
+				System.Diagnostics.Debug.WriteLine(e.StackTrace);
+				m_lPsms.Clear();
+				m_nNumberPsms = 0;
+				MessageBox.Show("Unable to open file\n\n'" + data.Filename + "'\n\nand exiting.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+			}
+			catch (Exception e)
+			{
+				System.Diagnostics.Debug.WriteLine(e.Message);
+				System.Diagnostics.Debug.WriteLine(e.StackTrace);
+				m_lPsms.Clear();
+				m_nNumberPsms = 0;
+				MessageBox.Show("Unable to interpret file\n\n'" + data.Filename + "'\n\nand exiting.\n\n'" + e.Message + "'", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+			}
+		}
+
+		private void LoadPepXML(BackgroundWorkerData data, IProgress<int> progress, CancellationToken iscancelled)
+		{
+			string rawfile = null;
+			PepXmlReader.Parse(data.Filename,
+					delegate (PepXml.RunSummary summary)
+					{
+						rawfile = Path.Combine(Path.GetDirectoryName(data.Filename), summary.BaseName + "." + summary.RawDataType);
+					},
+					delegate (PepXml.SearchSummary summary) {},
+					delegate (PepXml.SpectrumQuery query)
+					{
+						if (query.SearchHits.Count == 0)
+							return;
+
+						// ensure best rank first
+						query.SearchHits.Sort((a, b) => a.Rank.CompareTo(b.Rank));
+
+						string accession = "";
+						if (!string.IsNullOrEmpty(query.SearchHits[0].Protein))
+							accession = FastaUtils<SearchableSequenceDatabase>.RetrieveAccession(">" + query.SearchHits[0].Protein);
+
+						PeptideSpectrumMatch psm = new PeptideSpectrumMatch();
+						psm.RawFile			= rawfile;
+						psm.Charge			= query.Charge;
+						psm.Mz				= query.Mz;
+						psm.RetentionTime	= query.Charge;
+						psm.MinScan			= query.MinScan;
+						psm.MaxScan			= query.MaxScan;
+						psm.Fragmentation	= Spectrum.FragmentationType.HCD;
+						psm.Peptide			= query.SearchHits[0].Peptide;
+						psm.Proteins		= accession;
+						psm.Score			= query.SearchHits[0].SearchScores.Count > 0 ? query.SearchHits[0].SearchScores[0].Score : double.NaN;
+
+						if (!m_lPsms.ContainsKey(psm.RawFile))
+							m_lPsms.Add(psm.RawFile, new List<PeptideSpectrumMatch>());
+						m_lPsms[psm.RawFile].Add(psm);
+						m_nNumberPsms++;
+					}
+				);
+		}
+
+		private void LoadMzIdentML(BackgroundWorkerData data, IProgress<int> progress, CancellationToken iscancelled)
+		{
+			Regex regex_number = new Regex(@"(?<scannumber>\d+)");
+
+			Dictionary<string, string> rawfiles = new Dictionary<string, string>();
+			Dictionary<string, Peptide> peptides = new Dictionary<string, Peptide>();
+			Dictionary<string, Modification> modifications = new Dictionary<string, Modification>();
+
+			MzIdentReader.Parse(data.Filename,
+					// meta-data
+					delegate (MzIdent.SpectrumIdentification mzid_si) { },
+					delegate (MzIdent.SpectrumIdentificationProtocol mzid_protocol) { },
+					delegate (MzIdent.Inputs mzid_inputs)
+					{
+						// PD reports mzml files that are not there?
+						rawfiles.Add(mzid_inputs.SpectraData.Identifier, Path.GetFileNameWithoutExtension(mzid_inputs.SpectraData.Location));
+					},
+					// data
+					delegate (MzIdent.DbSequence mzid_dbsequence) { },
+					delegate (MzIdent.Peptide mzid_peptide)
+					{
+						// extract the peptide
+						Peptide peptide = new Peptide(mzid_peptide.Sequence);
+						
+						// extract the relevant modifications
+						foreach (MzIdent.Modification mzid_modification in mzid_peptide.Modifications)
+						{
+							CvParam cv = mzid_modification.CvParams.Values.ToArray()[0];
+							if (!modifications.ContainsKey(cv.Accession))
+							{
+								Modification modification = new Modification();
+								modification.Title			= cv.Name;
+								modification.Description	= cv.Name;
+								modification.Delta			= mzid_modification.Delta;
+								modification.Sites			= new Modification.Site[0];
+								modifications.Add(cv.Accession, modification);
+							}
+
+							if (mzid_modification.Location == 0)
+								peptide.Nterm = modifications[cv.Accession];
+							else if (mzid_modification.Location == peptide.Length + 1)
+								peptide.Cterm = modifications[cv.Accession];
+							else
+								peptide.Modifications[mzid_modification.Location - 1] = modifications[cv.Accession];
+						}
+
+						peptides.Add(mzid_peptide.Identifier, peptide);
+					},
+					delegate (MzIdent.PeptideEvidence mzid_evidence) { },
+					delegate (MzIdent.SpectrumIdentificationList mzid_list) { },
+					delegate (MzIdent.SpectrumIdentificationResult mzid_evidence)
+					{
+						if (mzid_evidence.Items.Count == 0)
+							return;
+						MzIdent.SpectrumIdentificationItem identification = mzid_evidence.Items[0];
+
+						string s = regex_number.Match(mzid_evidence.SpectrumIdentifier).Groups["scannumber"].Value;
+						int scannumber = int.Parse(s);
+
+						PeptideSpectrumMatch psm = new PeptideSpectrumMatch();
+						psm.RawFile			= rawfiles[mzid_evidence.SpectraDataRef];
+						psm.Charge			= identification.Charge;
+						psm.Mz				= identification.ExperimentaldMz;
+						psm.RetentionTime	= mzid_evidence.CvParams.ContainsKey("MS:1000894") ? float.Parse(mzid_evidence.CvParams["MS:1000894"].Value) : 0;
+						psm.MinScan			= scannumber;
+						psm.MaxScan			= scannumber;
+						psm.Fragmentation	= Spectrum.FragmentationType.HCD;
+						psm.Peptide			= peptides[identification.PeptideRef];
+
+						if (!m_lPsms.ContainsKey(psm.RawFile))
+							m_lPsms.Add(psm.RawFile, new List<PeptideSpectrumMatch>());
+						m_lPsms[psm.RawFile].Add(psm);
+						m_nNumberPsms++;
+					}
+				);
+		}
+
+		private void LoadRawFile(BackgroundWorkerData data, IProgress<int> progress, CancellationToken iscancelled)
+		{
+			// open the file, this will overwrite the path which is needed for path-based raw-data (e.g. Bruker)
+			string file_no_ext = Path.GetFileNameWithoutExtension(data.Filename);
+			string path = Path.GetDirectoryName(data.Filename);
+			string correct_path = Path.Combine(path, file_no_ext);
+
+			using (HeckLibRawFiles.HeckLibRawFile rawfile = OpenFile(correct_path, out m_sPath))
+			{
+				int sn_first = rawfile.FirstSpectrumNumber();
+				int sn_last = rawfile.LastSpectrumNumber();
+				for (int scannumber = sn_first; scannumber <= sn_last; ++scannumber)
+				{
+					double current_progress = sn_last == sn_first ? 100 : Math.Floor(100 * scannumber / (double)(sn_last - sn_first));
+					progress.Report((int)current_progress);
+
+					ScanHeader header = rawfile.GetScanHeader(scannumber);
+					PrecursorInfo precursor = rawfile.GetPrecursorInfo(scannumber);
+					if (header.ScanType != Spectrum.ScanType.MSn)
+						continue;
+
+					PeptideSpectrumMatch psm = new PeptideSpectrumMatch {
+							MinScan				= header.ScanNumber,
+							MaxScan				= header.ScanNumber,
+							ImsIndex			= header.IonMobilityIndex,
+							Fragmentation		= precursor.Fragmentation,
+							RetentionTime		= (float)precursor.RetentionTime,
+							RawFile				= correct_path,
+							Mz					= precursor.Mz,
+							Charge				= (short)precursor.Charge,
+							Mobility			= precursor.Mobility,
+							Intensity			= precursor.Intensity,
+							Peptide				= new Peptide("")
+						};
+					if (!m_lPsms.ContainsKey(psm.RawFile))
+						m_lPsms.Add(psm.RawFile, new List<PeptideSpectrumMatch>());
+					m_lPsms[psm.RawFile].Add(psm);
+					m_nNumberPsms++;
+				}
+			}
+		}
+
+		public void Dispose()
+		{
+			if (m_pCurrentRawFile != null)
+				m_pCurrentRawFile.Close();
+			if (m_pSpectralPredictions != null)
+				m_pSpectralPredictions.Dispose();
 		}
 		#endregion
 
@@ -214,57 +512,80 @@ namespace FragmentLab
 
 		public Centroid[] LoadSpectrum(PeptideSpectrumMatch psm, FragmentLabSettings settings, out int[] topxranks, out PeptideFragment.FragmentModel model, out INoiseDistribution noise, out PrecursorInfo precursor, out ScanHeader scanheader)
 		{
-			string rawfilename = Path.Combine(m_sPath, FilesA.GetFileNameWithoutExtension(psm.RawFile));
-			if (rawfilename != m_sCurrentRawFile)
+			Centroid[] spectrum;
+			Cursor.Current = Cursors.WaitCursor;
 			{
-				if (m_pCurrentRawFile != null)
-					m_pCurrentRawFile.Close();
+				topxranks = null;
+				model = null;
+				noise = null;
+				precursor = null;
+				scanheader = null;
 
-				m_sCurrentRawFile = rawfilename;
-				if (File.Exists(rawfilename + ".raw"))
-					m_pCurrentRawFile = new HeckLibRawFileThermo.HeckLibThermoRawFile(rawfilename + ".raw");
-				else if (File.Exists(rawfilename + ".mgf"))
-					m_pCurrentRawFile = new HeckLibRawFileMgf.HeckLibMgfRawFile(rawfilename + ".mgf");
-				else if (Directory.Exists(rawfilename + ".d"))
-					m_pCurrentRawFile = new HeckLibRawFileBruker.HeckLibBrukerRawFile(rawfilename + ".d");
-				else
-					throw new Exception("Unknown file format");
+				// make sure the stream is to the proper file
+				if (!OpenRawfileStream(psm))
+					return null;
+				if (m_pCurrentRawFile == null)
+					return null;
+
+				// verify whether the spectrum is there
+				int sn = m_pCurrentRawFile.GetScanNumber(psm.MinScan, 0);
+				if (sn < m_pCurrentRawFile.FirstSpectrumNumber() || sn > m_pCurrentRawFile.LastSpectrumNumber())
+				{
+					MessageBox.Show("Unknown scannumber: " + psm.MinScan, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+					return null;
+				}
+
+				// load the data
+				double minTIC, maxTIC, meanTIC;
+				m_pCurrentRawFile.GetMs2TicStatistics(out minTIC, out maxTIC, out meanTIC);
+
+				// get the spectrum
+				precursor = m_pCurrentRawFile.GetPrecursorInfo(m_pCurrentRawFile.GetScanNumber(psm.MinScan, psm.ImsIndex));
+
+				scanheader = m_pCurrentRawFile.GetScanHeader(psm.MinScan);
+				Centroid[] centroids = m_pCurrentRawFile.GetSpectrum(m_pCurrentRawFile.GetScanNumber(psm.MinScan, psm.ImsIndex), out noise);
+
+				// filter S/N
+				centroids = SpectrumUtils.FilterForSignalToNoise(centroids, settings.SignalToNoise);
+				centroids = SpectrumUtils.FilterForBasepeak(centroids, settings.PercentOfBasepeak / 100);
+
+				// detect isotopes
+				IsotopePattern[] isotopes = IsotopePatternDetection.Process(centroids, new IsotopePatternDetection.Settings { MaxCharge = (short)(psm.Charge + 1) });
+				centroids = SpectrumUtils.Deisotope(centroids, isotopes, psm.Charge, true);
+
+				// load the fragmentation model
+				Spectrum.FragmentationType fragtype = Spectrum.FragmentationType.CID;
+				if (settings.Fragmentation != Spectrum.FragmentationType.None)
+					fragtype = settings.Fragmentation;
+				else if (precursor.Fragmentation != Spectrum.FragmentationType.None)
+					fragtype = precursor.Fragmentation;
+				model = new PeptideFragment.FragmentModel(PeptideFragment.GetFragmentModel(fragtype));
+				model.tolerance = settings.MatchTolerance;
+				if (settings.ExcludeNeutralLosses == true)
+					model.TurnOff(PeptideFragment.MASSSHIFT_WATERLOSS | PeptideFragment.MASSSHIFT_AMMONIALOSS | PeptideFragment.MASSSHIFT_NEUTRALLOSS);
+
+				spectrum = SpectrumUtils.TopX(centroids, model.topx, model.topx_massrange, out topxranks);
 			}
+			Cursor.Current = Cursors.Default;
 
-			return LoadSpectrum(m_pCurrentRawFile, psm, settings, out topxranks, out model, out noise, out precursor, out scanheader);
+			return spectrum;
 		}
 
-		private static Centroid[] LoadSpectrum(HeckLibRawFiles.HeckLibRawFile rawfile, PeptideSpectrumMatch psm, FragmentLabSettings settings, out int[] topxranks, out PeptideFragment.FragmentModel model, out INoiseDistribution noise, out PrecursorInfo precursor, out ScanHeader scanheader)
+		public PrecursorInfo LoadPrecursorInfo(PeptideSpectrumMatch psm)
 		{
-			double minTIC, maxTIC, meanTIC;
-			rawfile.GetMs2TicStatistics(out minTIC, out maxTIC, out meanTIC);
+			PrecursorInfo precursor;
 
-			// get the spectrum
-			precursor = rawfile.GetPrecursorInfo(rawfile.GetScanNumber(psm.MinScan, psm.ImsIndex));
+			Cursor.Current = Cursors.WaitCursor;
+			{
+				// make sure the stream is to the proper file
+				OpenRawfileStream(psm);
 
-			scanheader = rawfile.GetScanHeader(psm.MinScan);
-			Centroid[] centroids = rawfile.GetSpectrum(rawfile.GetScanNumber(psm.MinScan, psm.ImsIndex), out noise);
+				// load the data
+				precursor = m_pCurrentRawFile.GetPrecursorInfo(m_pCurrentRawFile.GetScanNumber(psm.MinScan, psm.ImsIndex));
+			}
+			Cursor.Current = Cursors.Default;
 
-			// filter S/N
-			centroids = SpectrumUtils.FilterForSignalToNoise(centroids, settings.SignalToNoise);
-			centroids = SpectrumUtils.FilterForBasepeak(centroids, settings.PercentOfBasepeak);
-
-			// detect isotopes
-			IsotopePattern[] isotopes = IsotopePatternDetection.Process(centroids, new IsotopePatternDetection.Settings { MaxCharge = (short)(psm.Charge + 1) });
-			centroids = SpectrumUtils.Deisotope(centroids, isotopes, psm.Charge, true);
-
-			// load the fragmentation model
-			Spectrum.FragmentationType fragtype = Spectrum.FragmentationType.CID;
-			if (settings.Fragmentation != Spectrum.FragmentationType.None)
-				fragtype = settings.Fragmentation;
-			else if (precursor.Fragmentation != Spectrum.FragmentationType.None)
-				fragtype = precursor.Fragmentation;
-			model = new PeptideFragment.FragmentModel(PeptideFragment.GetFragmentModel(fragtype));
-			model.tolerance = settings.MatchTolerance;
-			if (settings.ExcludeNeutralLosses == true)
-				model.TurnOff(PeptideFragment.MASSSHIFT_WATERLOSS | PeptideFragment.MASSSHIFT_AMMONIALOSS | PeptideFragment.MASSSHIFT_NEUTRALLOSS);
-
-			return SpectrumUtils.TopX(centroids, model.topx, model.topx_massrange, out topxranks);
+			return precursor;
 		}
 		#endregion
 
@@ -281,7 +602,7 @@ namespace FragmentLab
 				if (iscancelled.IsCancellationRequested)
 					break;
 
-				string myfilename = Path.Combine(path, FilesA.GetFileNameWithoutExtension(psm.RawFile) + "_" + psm.MinScan + ".txt");
+				string myfilename = Path.Combine(path, Path.GetFileName(FilesA.GetFileNameWithoutExtension(psm.RawFile) + "_" + psm.MinScan + ".txt"));
 
 				int[] topxranks;
 				PeptideFragment.FragmentModel model;
@@ -289,6 +610,8 @@ namespace FragmentLab
 				PrecursorInfo precursor;
 				ScanHeader scanheader;
 				Centroid[] spectrum = LoadSpectrum(psm, settings, out topxranks, out model, out noise, out precursor, out scanheader);
+				if (spectrum == null)
+					continue;
 
 				Peptide peptide = settings.Peptide != null ? settings.Peptide : psm.Peptide;
 				PeptideFragment[] fragments = SpectrumUtils.MatchFragments(peptide, settings.Charge == 0 ? psm.Charge : settings.Charge, spectrum, model);
@@ -342,34 +665,6 @@ namespace FragmentLab
 				numberpsms++;
 				progress.Report((int)(100.0 * numberpsms / m_nNumberPsms));
 			}
-		}
-
-		public void ExportFrequentFlyers(BackgroundWorkerData data, IProgress<int> progress, CancellationToken iscancelled)
-		{
-			int numberpsms = 0;
-			FrequentFlyers freqflyers = new FrequentFlyers(50, 800, new Tolerance(40, Tolerance.ErrorUnit.PPM));
-			foreach (PeptideSpectrumMatch psm in data.PsmList)
-			{
-				if (iscancelled.IsCancellationRequested)
-					break;
-
-				int[] topxranks;
-				PeptideFragment.FragmentModel model;
-				INoiseDistribution noise;
-				PrecursorInfo precursor;
-				ScanHeader scanheader;
-				Centroid[] spectrum = LoadSpectrum(psm, data.Settings, out topxranks, out model, out noise, out precursor, out scanheader);
-
-				Peptide peptide = data.Settings.Peptide != null ? data.Settings.Peptide : psm.Peptide;
-				freqflyers.ProcessSpectrum(peptide, spectrum);
-
-				// update progress
-				numberpsms++;
-				progress.Report((int)(100.0 * numberpsms / m_nNumberPsms));
-			}
-
-			// output the freqflyer result
-			freqflyers.InterpretMzDiffs(data.Filename);
 		}
 
 		public void ExportPeptideProperties(BackgroundWorkerData data, IProgress<int> progress, CancellationToken iscancelled)
@@ -434,6 +729,7 @@ namespace FragmentLab
 			const string COLUMN_ASSIGNED_IONLOAD			= "Assigned ion load";
 			const string COLUMN_PRECURSOR_ASSIGNED			= "Precursor assigned";
 			const string COLUMN_PERCENT_SPECTRUM_EXPLAINED	= "Percentage spectrum explained";
+			const string COLUMN_ENCYCLOPEDIA_SCORE			= "EncyclopeDIA score";
 
 			// setup the CsvWriter
 			string filename = data.Filename;
@@ -481,6 +777,7 @@ namespace FragmentLab
 				writer.AddColumn(COLUMN_FRAGMENTATION_EFFICIENCY,		typeof(double));
 				writer.AddColumn(COLUMN_PRECURSOR_ASSIGNED,				typeof(bool));
 				writer.AddColumn(COLUMN_PERCENT_SPECTRUM_EXPLAINED,		typeof(double));
+				writer.AddColumn(COLUMN_ENCYCLOPEDIA_SCORE,				typeof(double));
 
 				int numberpsms = 0;
 				foreach (PeptideSpectrumMatch psm in data.PsmList)
@@ -495,21 +792,32 @@ namespace FragmentLab
 					PrecursorInfo precursor;
 					ScanHeader scanheader;
 					Centroid[] spectrum = LoadSpectrum(psm, settings, out topxranks, out model, out noise, out precursor, out scanheader);
+					if (spectrum == null)
+						continue;
 					model.tolerance = settings.MatchTolerance;
 
 					// create the fragments
+					short charge = settings.Charge == 0 ? psm.Charge : settings.Charge;
 					Peptide peptide = settings.Peptide != null ? settings.Peptide : psm.Peptide;
-					PeptideFragment[] fragments = SpectrumUtils.MatchFragments(peptide, settings.Charge == 0 ? psm.Charge : settings.Charge, spectrum, model);
+					PeptideFragment[] fragments = SpectrumUtils.MatchFragments(peptide, charge, spectrum, model);
 					PeptideFragmentAnnotator annotator = new PeptideFragmentAnnotator(psm.Peptide, fragments, spectrum);
+
+					// match against encyclopeDIA
+					Centroid[] predicted_spectrum;
+					PeptideFragment[] predicted_annotations;
+					this.GetSpectralPrediction(peptide, charge, out predicted_spectrum, out predicted_annotations);
+					double spectral_angle = double.NaN;
+					if (predicted_spectrum != null)
+						spectral_angle = SpectrumUtils.SpectrumAngle(predicted_spectrum, spectrum);
 
 					// calculate the coverage for each ion-type
 					CsvRow row = writer.CreateRow();
 
-					row[COLUMN_RAWFILE] = psm.RawFile;
-					row[COLUMN_SEQUENCE] = psm.Peptide.GetModifiedSequence();
-					row[COLUMN_SEQUENCE_LENGTH] = psm.Peptide.Length;
-					row[COLUMN_SCANNUMBER] = psm.MinScan;
-					row[COLUMN_DETECTEDIONCOUNT] = spectrum.Length;
+					row[COLUMN_RAWFILE]						= psm.RawFile;
+					row[COLUMN_SEQUENCE]					= psm.Peptide.GetModifiedSequence();
+					row[COLUMN_SEQUENCE_LENGTH]				= psm.Peptide.Length;
+					row[COLUMN_SCANNUMBER]					= psm.MinScan;
+					row[COLUMN_DETECTEDIONCOUNT]			= spectrum.Length;
 					foreach (int iontype in activeseries.Keys)
 					{
 						PeptideFragment.FragmentRange series = activeseries[iontype];
@@ -527,20 +835,190 @@ namespace FragmentLab
 						row[string.Format(COLUMN_ION_OVERALL, PeptideFragment.IonToString(iontype))] = hits_overall;
 						row[string.Format(COLUMN_ION_OVERALL_COVERAGE, PeptideFragment.IonToString(iontype))] = hits_overall / (double)series.GetTheoreticalBreaks(psm.Peptide.Sequence);
 					}
-					row[COLUMN_OBSERVED_FRAGMENTS] = annotator.ObservedFragments;
-					row[COLUMN_SEQUENCE_COVERAGE] = annotator.SequenceCoverage;
-					row[COLUMN_SEQUENCE_COVERAGE_CTERM] = annotator.SequenceCoverageCterm;
-					row[COLUMN_SEQUENCE_COVERAGE_NTERM] = annotator.SequenceCoverageNterm;
-					row[COLUMN_ASSIGNED_IONLOAD] = annotator.AssignedIonLoad;
-					row[COLUMN_FRAGMENTATION_EFFICIENCY] = annotator.FragmentationEfficiency;
-					row[COLUMN_PRECURSOR_ASSIGNED] = annotator.PrecursorAssigned;
-					row[COLUMN_PERCENT_SPECTRUM_EXPLAINED] = annotator.AssignedIonLoad;
+					row[COLUMN_OBSERVED_FRAGMENTS]				= annotator.ObservedFragments;
+					row[COLUMN_SEQUENCE_COVERAGE]				= annotator.SequenceCoverage;
+					row[COLUMN_SEQUENCE_COVERAGE_CTERM]			= annotator.SequenceCoverageCterm;
+					row[COLUMN_SEQUENCE_COVERAGE_NTERM]			= annotator.SequenceCoverageNterm;
+					row[COLUMN_ASSIGNED_IONLOAD]				= annotator.AssignedIonLoad;
+					row[COLUMN_FRAGMENTATION_EFFICIENCY]		= annotator.FragmentationEfficiency;
+					row[COLUMN_PRECURSOR_ASSIGNED]				= annotator.PrecursorAssigned;
+					row[COLUMN_PERCENT_SPECTRUM_EXPLAINED]		= annotator.AssignedIonLoad;
+					row[COLUMN_ENCYCLOPEDIA_SCORE]				= spectral_angle;
 
 					writer.WriteRow(row);
 
 					// update progress
 					numberpsms++;
 					progress.Report((int)(100.0 * numberpsms / m_nNumberPsms));
+				}
+			}
+		}
+
+		public void ExportProsit(BackgroundWorkerData data, IProgress<int> progress, CancellationToken iscancelled)
+		{
+			const string COLUMN_SEQUENCE				= "modified_sequence";	// length [7-30]
+			const string COLUMN_COLISION_ENERGY			= "collision_energy";	// energy [10-50] (according to the paper, NCE)
+			const string COLUMN_PRECURSOR_CHARGE		= "precursor_charge";	// charge-state [1-6]
+
+			
+			// open the writer
+			CsvWriter writer;
+			try
+			{
+				writer = new CsvWriter(data.Filename, ',');
+				writer.AddColumn(COLUMN_SEQUENCE,					typeof(string));
+				writer.AddColumn(COLUMN_COLISION_ENERGY,			typeof(int));
+				writer.AddColumn(COLUMN_PRECURSOR_CHARGE,			typeof(short));
+			}
+			catch (Exception)
+			{
+				MessageBox.Show("Couldn't open file '" + data.Filename + "'");
+				return;
+			}
+			FragmentLabSettings settings = data.Settings;
+
+			// process the data
+			int numberpsms = 0;
+			foreach (PeptideSpectrumMatch psm in data.PsmList)
+			{
+				if (iscancelled.IsCancellationRequested)
+					break;
+
+				// sanity checks, prosit doesn't deal with everyting
+				if (psm.Charge < 1 || psm.Charge > 6)
+					continue;
+				if (psm.Peptide.Length < 7 || psm.Peptide.Length > 30)
+					continue;
+
+				// convert the sequence - we check here whether the modifications are supported
+				StringBuilder str_sequence = new StringBuilder();
+				if (psm.Peptide.Nterm != null || psm.Peptide.Cterm != null)
+					continue;
+
+				bool sequence_ok = true;
+				for (int pos = 0; pos < psm.Peptide.Length; ++pos)
+				{
+					if (psm.Peptide.Modifications[pos] == null)
+					{
+						str_sequence.Append(psm.Peptide.Sequence[pos]);
+					}
+					else if (psm.Peptide.Modifications[pos].Title == "Carbamidomethyl (C)")
+					{
+						str_sequence.Append(psm.Peptide.Sequence[pos]);
+					}
+					else if (psm.Peptide.Modifications[pos].Title == "Oxidation (M)")
+					{
+						str_sequence.Append(psm.Peptide.Sequence[pos]);
+						str_sequence.Append("(ox)");
+					}
+					else
+					{
+						sequence_ok = false;
+						break;
+					}
+				}
+
+				if (!sequence_ok)
+					continue;
+
+				// get the precursor info
+				PrecursorInfo precursor = LoadPrecursorInfo(psm);
+
+				// make the entry
+				CsvRow row = writer.CreateRow();
+				row[COLUMN_SEQUENCE]						= str_sequence.ToString();
+				row[COLUMN_PRECURSOR_CHARGE]				= psm.Charge;
+				row[COLUMN_COLISION_ENERGY]					= (int)precursor.FragmentationEnergy;
+				writer.WriteRow(row);
+
+				// update progress
+				numberpsms++;
+				progress.Report((int)(100.0 * numberpsms / m_nNumberPsms));
+			}
+			writer.Close();
+		}
+
+		public void ExportEncyclopeDIA(BackgroundWorkerData data, IProgress<int> progress, CancellationToken iscancelled)
+		{
+			FragmentLabSettings settings = data.Settings;
+
+			// create the database
+			using (EncyclopediaDatabase db = new EncyclopediaDatabase(data.Filename, new DatabaseInformation { FileName = data.Filename, Created = DateTime.Now, LastAccessed = DateTime.Now, HashCode = "" })) { ; }
+
+			using (EncyclopediaDatabase database = new EncyclopediaDatabase(data.Filename))
+			{
+				// collect all the unique peptide sequences, so we can select the best scoring one for the database
+				Dictionary<string, List<PeptideSpectrumMatch>> grouped_psms = new Dictionary<string, List<PeptideSpectrumMatch>>();
+				foreach (PeptideSpectrumMatch psm in data.PsmList)
+				{
+					if (iscancelled.IsCancellationRequested)
+						break;
+
+					string modified_sequence = psm.Peptide.GetModifiedSequence();
+					if (!grouped_psms.ContainsKey(modified_sequence))
+						grouped_psms.Add(modified_sequence, new List<PeptideSpectrumMatch>());
+					grouped_psms[modified_sequence].Add(psm);
+				}
+
+				// process the spectra
+				int numberpsms = 0;
+				foreach (string modified_sequence in grouped_psms.Keys)
+				{
+					if (iscancelled.IsCancellationRequested)
+						break;
+
+					// get the information for the current modified sequence
+					int psm_i = 0; int best_psm_i = 0; double best_psm_score = -1;
+					PeptideSpectrumMatch best_psm = null; Centroid[] best_spectrum = null; PeptideFragment[] best_fragments = null;
+					do
+					{
+						PeptideSpectrumMatch current_psm = grouped_psms[modified_sequence][psm_i];
+
+						short charge = current_psm.Charge;
+						double mass = MassSpectrometry.ToMass(current_psm.Mz, current_psm.Charge);
+
+						int[] topxranks; PeptideFragment.FragmentModel model; INoiseDistribution noise; PrecursorInfo precursor; ScanHeader scanheader;
+						Centroid[] spectrum = LoadSpectrum(current_psm, settings, out topxranks, out model, out noise, out precursor, out scanheader);
+						if (spectrum == null)
+							continue;
+
+						Peptide peptide = current_psm.Peptide;
+						PeptideFragment[] fragments = SpectrumUtils.MatchFragments(peptide, current_psm.Charge, spectrum, model);
+
+						SpectrumUtils.PsmScore psmscore = SpectrumUtils.CalcPsmScore(peptide, charge, spectrum, topxranks, model);
+						if (psmscore.Score > best_psm_score)
+						{
+							best_psm_i			= psm_i;
+							best_psm_score		= psmscore.Score;
+							best_spectrum		= spectrum;
+							best_fragments		= fragments;
+							best_psm			= current_psm;
+						}
+					} while (++psm_i < grouped_psms[modified_sequence].Count);
+
+					// store the peaks that are actually annotated in the database and move on
+					int nr_peaks = 0;
+					foreach (PeptideFragment fragment in best_fragments)
+						if (fragment != null) nr_peaks++;
+
+					Centroid[] final_spectrum = new Centroid[nr_peaks];
+					PeptideFragment[] final_annotations = new PeptideFragment[nr_peaks];
+
+					int current_i = 0;
+					for (int i = 0; i < best_spectrum.Length; ++i)
+					{
+						if (best_fragments[i] == null)
+							continue;
+						Centroid.Copy(ref best_spectrum[i], ref final_spectrum[current_i]);
+						final_annotations[current_i] = best_fragments[i];
+						current_i++;
+					}
+
+					database.AddSpectrumForPeptide(best_psm, final_spectrum, final_annotations);
+
+					// update progress
+					numberpsms++;
+					progress.Report((int)(100.0 * numberpsms / grouped_psms.Count));
 				}
 			}
 		}
@@ -592,6 +1070,8 @@ namespace FragmentLab
 				PrecursorInfo precursor;
 				ScanHeader scanheader;
 				Centroid[] spectrum = LoadSpectrum(psm, settings, out topxranks, out model, out noise, out precursor, out scanheader);
+				if (spectrum == null)
+					continue;
 				model.tolerance = settings.MatchTolerance;
 
 				// perform calculations
@@ -604,14 +1084,14 @@ namespace FragmentLab
 
 				// dump the results
 				CsvRow row = writer.CreateRow();
-				row[COLUMN_RAWFILE] = psm.RawFile;
-				row[COLUMN_SCANNUMBER] = psm.MinScan;
-				row[COLUMN_PRECURSOR_MZ] = psm.Mz;
-				row[COLUMN_PRECURSOR_CHARGE] = psm.Charge;
-				row[COLUMN_PRECURSOR_GLYCAN_SCORE] = simplescore == null ? double.NaN : simplescore.GlycanScore;
-				row[COLUMN_PRECURSOR_GLCNAC_GALNAC] = simplescore == null ? double.NaN : simplescore.GlcNAcGalNAcRatio;
-				row[COLUMN_PRECURSOR_MSCORE] = mscore;
-				row[COLUMN_PRECURSOR_PHOSPHOPEAK] = hexphos ? "+" : "";
+				row[COLUMN_RAWFILE]						= psm.RawFile;
+				row[COLUMN_SCANNUMBER]					= psm.MinScan;
+				row[COLUMN_PRECURSOR_MZ]				= psm.Mz;
+				row[COLUMN_PRECURSOR_CHARGE]			= psm.Charge;
+				row[COLUMN_PRECURSOR_GLYCAN_SCORE]		= simplescore == null ? double.NaN : simplescore.GlycanScore;
+				row[COLUMN_PRECURSOR_GLCNAC_GALNAC]		= simplescore == null ? double.NaN : simplescore.GlcNAcGalNAcRatio;
+				row[COLUMN_PRECURSOR_MSCORE]			= mscore;
+				row[COLUMN_PRECURSOR_PHOSPHOPEAK]		= hexphos ? "+" : "";
 				writer.WriteRow(row);
 
 				// update progress
@@ -628,7 +1108,7 @@ namespace FragmentLab
 
 			// parse the mgf file
 			CsvWriter writer = null;
-			MgfReader.Parse(files[0], delegate (Centroid[] spectrum, PrecursorInfo precursor, string title, Spectrum.MassAnalyzer massanalyzer) {
+			HeckLibRawFileMgf.MgfRawFile.Parse(files[0], delegate (Centroid[] spectrum, PrecursorInfo precursor, string title, Spectrum.MassAnalyzer massanalyzer) {
 					// if it's the first entry create the writer with the appropriate columns
 					if (writer == null)
 					{
@@ -675,6 +1155,62 @@ namespace FragmentLab
 				result.Add(tokens2[0], tokens2[1]);
 			}
 			return result;
+		}
+		#endregion
+
+
+		#region calculation routines
+		public void CalculateFrequentFlyers(BackgroundWorkerData data, IProgress<int> progress, CancellationToken iscancelled)
+		{
+			int numberpsms = 0;
+			FrequentFlyers freqflyers = new FrequentFlyers(50, 800, new Tolerance(40, Tolerance.ErrorUnit.PPM));
+			foreach (PeptideSpectrumMatch psm in data.PsmList)
+			{
+				if (iscancelled.IsCancellationRequested)
+					break;
+
+				int[] topxranks;
+				PeptideFragment.FragmentModel model;
+				INoiseDistribution noise;
+				PrecursorInfo precursor;
+				ScanHeader scanheader;
+				Centroid[] spectrum = LoadSpectrum(psm, data.Settings, out topxranks, out model, out noise, out precursor, out scanheader);
+				if (spectrum == null)
+					continue;
+
+				Peptide peptide = data.Settings.Peptide != null ? data.Settings.Peptide : psm.Peptide;
+				freqflyers.ProcessSpectrum(peptide, spectrum);
+
+				// update progress
+				numberpsms++;
+				progress.Report((int)(100.0 * numberpsms / m_nNumberPsms));
+			}
+
+			data.FreqFyerResult = freqflyers;
+		}
+		#endregion
+
+
+		#region spectrum prediction
+		public void LoadSpectralPredictions(BackgroundWorkerData data, IProgress<int> progress, CancellationToken iscancelled)
+		{
+			progress.Report(20);
+			m_pSpectralPredictions = new EncyclopediaDatabase(data.Filename);
+			progress.Report(100);
+		}
+
+		public void ClearSpectralPredictions()
+		{
+			m_pSpectralPredictions = null;
+		}
+
+		public void GetSpectralPrediction(Peptide peptide, short charge, out Centroid[] spectrum, out PeptideFragment[] annotations)
+		{
+			spectrum = null;
+			annotations = null;
+			if (m_pSpectralPredictions == null)
+				return;
+			spectrum = m_pSpectralPredictions.GetSpectrumForPeptide(peptide, charge, out annotations);
 		}
 		#endregion
 
@@ -737,19 +1273,15 @@ namespace FragmentLab
 						PeptideSpectrumMatch psm = m_aAllPsms[psmId];
 
 						// open the file (?)
-						string rawfilename = Path.Combine(m_sPath, FilesA.GetFileNameWithoutExtension(psm.RawFile));
+						string rawfilename = FilesA.GetFileNameWithoutExtension(psm.RawFile);
 						if (rawfilename != m_sCurrentRawFile)
 						{
 							if (m_pCurrentRawFile != null)
 								m_pCurrentRawFile.Close();
 
 							m_sCurrentRawFile = rawfilename;
-							if (File.Exists(rawfilename + ".raw"))
-								m_pCurrentRawFile = new HeckLibRawFileThermo.HeckLibThermoRawFile(rawfilename + ".raw");
-							else if (Directory.Exists(rawfilename + ".d"))
-								m_pCurrentRawFile = new HeckLibRawFileBruker.HeckLibBrukerRawFile(rawfilename + ".d");
-							else
-								throw new Exception("Unknown file format");
+							string path;
+							m_pCurrentRawFile = OpenFile(rawfilename, out path);
 
 							m_pCurrentRawFile.GetMs2TicStatistics(out minTIC, out maxTIC, out meanTIC);
 						}
@@ -795,7 +1327,9 @@ namespace FragmentLab
 					// create averaged mobility values
 					double ccs = Statistics.Median(ccss.ToArray());
 					double mobility = Statistics.Median(mobilities.ToArray());
-					double mobility_length = Statistics.Max(mobility_lengths.ToArray());
+					double mobility_length = 0;
+					if (mobility_lengths.Count > 0)
+						mobility_length = Statistics.Max(mobility_lengths.ToArray());
 
 					// check whether there we usable spectra
 					if (best_precursor == null)
@@ -811,7 +1345,7 @@ namespace FragmentLab
 
 					// filter S/N
 					centroids = SpectrumUtils.FilterForSignalToNoise(centroids, m_pSettings.SignalToNoise);
-					centroids = SpectrumUtils.FilterForBasepeak(centroids, m_pSettings.PercentOfBasepeak);
+					centroids = SpectrumUtils.FilterForBasepeak(centroids, m_pSettings.PercentOfBasepeak / 100);
 
 					// detect isotopes
 					IsotopePattern[] isotopes = IsotopePatternDetection.Process(centroids, new IsotopePatternDetection.Settings { MaxCharge = best_precursor.Charge });
@@ -839,7 +1373,7 @@ namespace FragmentLab
 					string title = string.Format("SPECTRA:{0} MOBILITY:{1} MOBILITYLENGTH:{2} CCS:{3} INTENSITY:{4} D:{5} GDFR:{6} Xrea:{7}", all_mzs.Count, mobility, mobility_length, ccs, best_precursor.Intensity, msmsEval, goodDiffFraction, xrea);
 
 					PrecursorInfo pinfo = new PrecursorInfo(best_precursor);
-					MgfWriter.WriteSpectrum(m_fMgfWriter, title, pinfo, centroids_filtered, best_scanheader.Polarity, Spectrum.MassAnalyzer.TimeOfFlight);
+					HeckLibRawFileMgf.MgfRawFile.WriteSpectrum(m_fMgfWriter, title, pinfo, centroids_filtered, best_scanheader.Polarity, Spectrum.MassAnalyzer.TimeOfFlight);
 
 					// write the meta info
 					CsvRow row = m_fMgfMetaWriter.CreateRow();
@@ -969,7 +1503,8 @@ namespace FragmentLab
 			}
 
 			// break up the indices in tranches
-			List<List<int>[]> sliced_groupedpsms = ArraysA.Slice(groupedpsms.ToArray(), (int)Math.Ceiling(groupedpsms.Count / Math.Max(1, Environment.ProcessorCount - 1.0)));
+			double nrprocessors = settings.NumberCores;//Math.Max(1, Environment.ProcessorCount - 1.0);
+			List<List<int>[]> sliced_groupedpsms = ArraysA.Slice(groupedpsms.ToArray(), (int)Math.Ceiling(groupedpsms.Count / nrprocessors));
 
 			// make the separate threads
 			List<string> filenames = new List<string>();
@@ -1007,7 +1542,9 @@ namespace FragmentLab
 		private string m_sCurrentRawFile = null;
 		private HeckLibRawFiles.HeckLibRawFile m_pCurrentRawFile = null;
 
-		private Dictionary<string, Modification> m_lModifications = Modification.Parse("modifications.xml");
+		private HeckLibSettingsDatabase m_pSettingsDatabase;
+
+		private EncyclopediaDatabase m_pSpectralPredictions = null;
 		#endregion
 	}
 }

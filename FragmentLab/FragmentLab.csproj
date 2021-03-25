@@ -18,9 +18,9 @@
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
     <AssemblyTitle>FragmentLab</AssemblyTitle>
-    <Company>Microsoft</Company>
+    <Company>Scheltema Laboratory</Company>
     <Product>FragmentLab</Product>
-    <Copyright>Copyright © Biomolecular Mass Spectrometry and Proteomics</Copyright>
+    <Copyright>Copyright © Scheltema Lab</Copyright>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>x64</PlatformTarget>
@@ -33,8 +33,19 @@
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>icons\ubc_logo_retina.ico</ApplicationIcon>
-    <Description>Peptide fragmentation pattern tooling.</Description>
-    <Version>1.0.1</Version>
+    <Description>Peptide fragmentation laboratory. This tool offers a wide range of options to inspect / analyze peptide fragmentation spectra in detail.
+
+Contributors:
+- Richard Scheltema
+- Andris Jankevics
+- Henk van der Toorn
+- Bastiaan de Graaf
+- Sem Tamara</Description>
+    <Version>2.5.0.9</Version>
+    <PackageProjectUrl>https://scheltemalab.com</PackageProjectUrl>
+    <AssemblyVersion>2.5.0.9</AssemblyVersion>
+    <Authors>Richard Scheltema, Andris Jankevics, Henk van der Toorn, Bastiaan de Graaf, Sem Tamara</Authors>
+    <FileVersion>2.5.0.9</FileVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
@@ -53,22 +64,70 @@
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Deployment" />
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Windows.Forms.DataVisualization" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Update="dialogs\AboutBox.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="dialogs\DialogFragmentReport.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Update="FragmentLab.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Update="FragmentLab.Designer.cs">
       <DependentUpon>FragmentLab.cs</DependentUpon>
     </Compile>
+    <EmbeddedResource Update="FragmentLab.resx">
+      <DependentUpon>FragmentLab.cs</DependentUpon>
+    </EmbeddedResource>
+
+    <Compile Update="dialogs\DialogFragmentReport.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="dialogs\DialogFragmentReport.Designer.cs">
+      <DependentUpon>DialogFragmentReport.cs</DependentUpon>
+    </Compile>
+    <EmbeddedResource Update="dialogs\DialogFragmentReport.resx">
+      <DependentUpon>DialogFragmentReport.cs</DependentUpon>
+    </EmbeddedResource>
+
+    <Compile Update="dialogs\DialogFrequentFlyers.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="dialogs\DialogFrequentFlyers.Designer.cs">
+      <DependentUpon>DialogFrequentFlyers.cs</DependentUpon>
+    </Compile>
+    <EmbeddedResource Update="dialogs\DialogFrequentFlyers.resx">
+      <DependentUpon>DialogFrequentFlyers.cs</DependentUpon>
+    </EmbeddedResource>
+
+    <Compile Update="dialogs\AboutBox.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="dialogs\AboutBox.Designer.cs">
+      <DependentUpon>AboutBox.cs</DependentUpon>
+    </Compile>
+    <EmbeddedResource Update="dialogs\AboutBox.resx">
+      <DependentUpon>AboutBox.cs</DependentUpon>
+    </EmbeddedResource>
+
+    <Compile Update="dialogs\DialogSequenceCoverage.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="dialogs\DialogSequenceCoverage.Designer.cs">
+      <DependentUpon>DialogSequenceCoverage.cs</DependentUpon>
+    </Compile>
+    <EmbeddedResource Update="dialogs\DialogSequenceCoverage.resx">
+      <DependentUpon>DialogSequenceCoverage.cs</DependentUpon>
+    </EmbeddedResource>
+
     <Compile Update="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <EmbeddedResource Update="FragmentLab.resx">
-      <DependentUpon>FragmentLab.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Update="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -88,14 +147,14 @@
     <EmbeddedResource Include="icons\ubc_logo_retina.ico" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="hecklib-core" Version="1.0.13" />
-    <PackageReference Include="hecklib-graphics" Version="1.1.2" />
-    <PackageReference Include="hecklib-io" Version="1.2.1" />
-    <PackageReference Include="hecklib-precalc" Version="1.0.3" />
-    <PackageReference Include="hecklib-rawfiles-bruker" Version="2.3.300.189" />
-    <PackageReference Include="hecklib-rawfiles-mgf" Version="1.0.5" />
-    <PackageReference Include="hecklib-rawfiles-thermo" Version="4.0.26.1" />
-    <PackageReference Include="hecklib-win32" Version="1.0.0" />
-    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.111" />
+    <PackageReference Include="hecklib-rawfiles-mzxml" Version="1.0.403.737" />
+    <PackageReference Include="hecklib-win32" Version="1.0.165.24499" />
+    <PackageReference Include="hecklib.database" Version="1.0.405.26181" />
+    <PackageReference Include="hecklib.graphics" Version="1.3.405.26308" />
+    <PackageReference Include="hecklib.rawfiles.bruker" Version="6.0.403.737" />
+    <PackageReference Include="hecklib.rawfiles.mgf" Version="6.0.403.737" />
+    <PackageReference Include="hecklib.rawfiles.thermo" Version="6.0.403.737" />
+    <PackageReference Include="LiveCharts.WinForms" Version="0.9.7.1" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.112" />
   </ItemGroup>
 </Project>
