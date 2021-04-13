@@ -219,6 +219,11 @@ namespace FragmentLab.dialogs
 				throw new NotImplementedException();
 			}
 
+			public IEnumerable<int> GetIteratorModifiedPeptidesInMassRange(double minmass, double maxmass)
+			{
+				throw new NotImplementedException();
+			}
+
 			public DateTime GetLastAccessTimeForDb()
 			{
 				throw new NotImplementedException();
