@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <?define FragmentLab_TargetDir=$(var.FragmentLab.TargetDir)?>
+
+  <!-- create the product description -->
+  <Product Id="*" Name="FragmentLab" Language="1033" Version="2.6.1.5" Manufacturer="Scheltema Lab" UpgradeCode="a9d07c50-cc6e-43e9-9afe-4c63c2d3f97e">
+		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+
+    <!-- ensure that all files end up in the MSI -->
+    <Media Id='1' Cabinet='FragmentLab.cab' EmbedCab='yes' />
+    
+    <!-- definition of the UI -->
+    <UIRef Id="WixUI_Minimal" />
+    <WixVariable Id="WixUILicenseRtf" Value="license.rtf" />
+    
+    <!--  -->
+    <Feature Id="Complete" Title="FragmentLab_Installer" Description="The complete package." Display="expand" ConfigurableDirectory="INSTALLFOLDER" Level="1">
+      <ComponentGroupRef Id="ProductComponents"/>
+      <ComponentGroupRef Id="Shortcuts"/>
+    </Feature>
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+
+    <Feature Id="ProductFeature" Title="FragmentLab" Level="1">
+			<ComponentGroupRef Id="ProductComponents" />
+			<ComponentGroupRef Id="ProgramFilesFolder_files" />
+		</Feature>
+  </Product>
+
+  <Fragment>
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="INSTALLFOLDER" Name="FragmentLab" />
+      </Directory>
+      <Directory Id="ProgramMenuFolder" Name="Programs">
+        <Directory Id="ProgramMenuDir" Name="FragmentLab" />
+      </Directory>
+      <Directory Id="DesktopFolder" Name="Desktop" />
+    </Directory>
+  </Fragment>
+  
+	<Fragment>
+    <Icon Id="FragmentLab.exe" SourceFile="$(var.FragmentLab_TargetDir)FragmentLab.exe"/>
+    
+    <!-- executable definition -->
+    <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+      <Component Id="MainExecutable" Guid="{6fea4ca2-dbaa-475d-8981-4a5d16eb5613}">
+        <File Id="FragmentLab" Name="FragmentLab.exe" Source="$(var.FragmentLab_TargetDir)FragmentLab.exe" KeyPath="yes">
+          <Shortcut Id="startmenuFragmentLab" Directory="ProgramMenuDir" Name="FragmentLab" WorkingDirectory="IINSTALLDIR" Icon="FragmentLab.exe" Advertise="yes"/>
+          <Shortcut Id="desktopFragmentLab" Directory="DesktopFolder" Name="FragmentLab" WorkingDirectory="IINSTALLDIR" Icon="FragmentLab.exe" Advertise="yes"/>
+        </File>
+      </Component>
+    </ComponentGroup>
+    
+    <!-- windows shortcuts -->
+    <ComponentGroup Id="Shortcuts" Directory="ProgramMenuDir">
+      <Component Id="ProgramMenuShortcut">
+        <RemoveFolder Id="ProgramMenuDir" On="uninstall" />
+        <RegistryValue Root="HKCU" Key="Software\[Manufacturer]\[ProductName]" Type="string" Value="" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+    
+    <!-- files to include in the install -->
+	<!--
+ 	<Directory Id="INSTALLFOLDER" Name="WWU">
+		<Component Id="SQLite.Interop.dll_x32" Guid="a98f19ec-850d-40ae-b453-1019e46ebb9d">
+			<File Id="SQLite.Interop.dll_x32" Name="SQLite.Interop.dll" Source="$(var.FragmentLab_TargetDir)x86/SQLite.Interop.dll" />
+		</Component>
+	</Directory>
+	<Directory Id="INSTALLFOLDER" Name="WWU">
+		<Component Id="SQLite.Interop.dll_x64" Guid="b324b774-d77c-496f-8e58-405323538044">
+			<File Id="SQLite.Interop.dll_x64" Name="SQLite.Interop.dll" Source="$(var.FragmentLab_TargetDir)x64/SQLite.Interop.dll" />
+		</Component>
+	</Directory>
+	-->
+   <ComponentGroup Id="ProgramFilesFolder_files" Directory="INSTALLFOLDER">
+	    <Component Id="PdfSharp_WPF.dll" Guid="326b1b1f-ced7-4133-a903-694045bde69b">
+	      <File Id="PdfSharp_WPF.dll" Name="PdfSharp-WPF.dll" Source="$(var.FragmentLab_TargetDir)PdfSharp-WPF.dll" />
+	    </Component>
+	    <Component Id="PdfSharp.Xps.dll" Guid="43159bd7-b5da-482e-ae61-1a9e9c0d12bc">
+	      <File Id="PdfSharp.Xps.dll" Name="PdfSharp.Xps.dll" Source="$(var.FragmentLab_TargetDir)PdfSharp.Xps.dll" />
+	    </Component>
+        <Component Id="itextsharp.dll" Guid="5575c872-c8f7-4b0a-9e28-c3c983e105f4">
+          <File Id="itextsharp.dll" Name="itextsharp.dll" Source="$(var.FragmentLab_TargetDir)itextsharp.dll" />
+        </Component>
+        <Component Id="BouncyCastle.Crypto.dll" Guid="c408c272-9085-4c00-804a-cca167fa71d5">
+          <File Id="BouncyCastle.Crypto.dll" Name="BouncyCastle.Crypto.dll" Source="$(var.FragmentLab_TargetDir)BouncyCastle.Crypto.dll" />
+        </Component>
+        <Component Id="zlib.net.dll" Guid="0ac3d871-55cd-4c71-b6bb-42f9b0efede9">
+	      <File Id="zlib.net.dll" Name="zlib.net.dll" Source="$(var.FragmentLab_TargetDir)zlib.net.dll" />
+	    </Component>
+	    <Component Id="System.Data.SQLite.dll" Guid="da67f2e2-d75e-46fd-9d63-494838f86049">
+	      <File Id="System.Data.SQLite.dll" Name="System.Data.SQLite.dll" Source="$(var.FragmentLab_TargetDir)System.Data.SQLite.dll" />
+	    </Component>
+	    <Component Id="hecklib_precalc.dll" Guid="4806ccea-206a-46a9-800a-3043e071de15">
+	      <File Id="hecklib_precalc.dll" Name="hecklib-precalc.dll" Source="$(var.FragmentLab_TargetDir)hecklib-precalc.dll" />
+	    </Component>
+	    <Component Id="hecklib_rawfiles_mzxml.dll" Guid="bd733230-0e55-459f-b7c1-266309f3da18">
+	      <File Id="hecklib_rawfiles_mzxml.dll" Name="hecklib-rawfiles-mzxml.dll" Source="$(var.FragmentLab_TargetDir)hecklib-rawfiles-mzxml.dll" />
+	    </Component>
+	    <Component Id="hecklib_rawfiles_bruker.dll" Guid="0e3900de-a102-4f1e-88d3-490fb8fdb86a">
+	      <File Id="hecklib_rawfiles_bruker.dll" Name="hecklib-rawfiles-bruker.dll" Source="$(var.FragmentLab_TargetDir)hecklib-rawfiles-bruker.dll" />
+	    </Component>
+	    <Component Id="hecklib_rawfiles_mgf.dll" Guid="7a8601ff-92a6-4f10-995c-bba2892caffa">
+	      <File Id="hecklib_rawfiles_mgf.dll" Name="hecklib-rawfiles-mgf.dll" Source="$(var.FragmentLab_TargetDir)hecklib-rawfiles-mgf.dll" />
+	    </Component>
+	    <Component Id="hecklib_rawfiles_thermo.dll" Guid="969dd174-667a-4795-89f2-c3d4da6cf4a1">
+	      <File Id="hecklib_rawfiles_thermo.dll" Name="hecklib-rawfiles-thermo.dll" Source="$(var.FragmentLab_TargetDir)hecklib-rawfiles-thermo.dll" />
+	    </Component>
+	    <Component Id="LiveCharts.Wpf.dll" Guid="e86a4837-72d3-4e91-84ad-c6e3165e32da">
+	      <File Id="LiveCharts.Wpf.dll" Name="LiveCharts.Wpf.dll" Source="$(var.FragmentLab_TargetDir)LiveCharts.Wpf.dll" />
+	    </Component>
+	    <Component Id="LiveCharts.dll" Guid="d1ee59c9-b015-45d5-8762-ddd41c26e5fe">
+	      <File Id="LiveCharts.dll" Name="LiveCharts.dll" Source="$(var.FragmentLab_TargetDir)LiveCharts.dll" />
+	    </Component>
+	    <Component Id="LiveCharts.WinForms.dll" Guid="4deffc59-5a17-4147-9212-a21d41a7487a">
+	      <File Id="LiveCharts.WinForms.dll" Name="LiveCharts.WinForms.dll" Source="$(var.FragmentLab_TargetDir)LiveCharts.WinForms.dll" />
+	    </Component>
+	    <Component Id="hecklib_win32.dll" Guid="54237f66-b567-4547-a84e-5e95fcb6a425">
+	      <File Id="hecklib_win32.dll" Name="hecklib-win32.dll" Source="$(var.FragmentLab_TargetDir)hecklib-win32.dll" />
+	    </Component>
+	    <Component Id="ObjectListView.dll" Guid="90800dbb-dbae-485a-a722-a5764971fdf5">
+	      <File Id="ObjectListView.dll" Name="ObjectListView.dll" Source="$(var.FragmentLab_TargetDir)ObjectListView.dll" />
+	    </Component>
+	    <Component Id="hecklib_graphics.dll" Guid="5e7ea648-3528-4bb4-8896-9b1ca26147f3">
+	      <File Id="hecklib_graphics.dll" Name="hecklib-graphics.dll" Source="$(var.FragmentLab_TargetDir)hecklib-graphics.dll" />
+	    </Component>
+	    <Component Id="hecklib_database.dll" Guid="cac63959-b3ad-4c1a-b068-e4df8cb0d47f">
+	      <File Id="hecklib_database.dll" Name="hecklib-database.dll" Source="$(var.FragmentLab_TargetDir)hecklib-database.dll" />
+	    </Component>
+	    <Component Id="hecklib_rawfiles.dll" Guid="7a9d5599-e49e-4319-9fa4-0e7246dfe0ce">
+	      <File Id="hecklib_rawfiles.dll" Name="hecklib-rawfiles.dll" Source="$(var.FragmentLab_TargetDir)hecklib-rawfiles.dll" />
+	    </Component>
+	    <Component Id="hecklib_core.dll" Guid="3beba97f-ba9c-484f-a07a-ac9ef1d2d6cf">
+	      <File Id="hecklib_core.dll" Name="hecklib-core.dll" Source="$(var.FragmentLab_TargetDir)hecklib-core.dll" />
+	    </Component>
+	    <Component Id="FragmentLab.exe.config" Guid="fc08fde1-e038-48ba-b00b-76db5e23bb2e">
+	      <File Id="FragmentLab.exe.config" Name="FragmentLab.exe.config" Source="$(var.FragmentLab_TargetDir)FragmentLab.exe.config" />
+	    </Component>
+	    <Component Id="ThermoFisher.CommonCore.Data.dll" Guid="13de255c-3346-4a32-9870-537ac65046b3">
+	      <File Id="ThermoFisher.CommonCore.Data.dll" Name="ThermoFisher.CommonCore.Data.dll" Source="$(var.FragmentLab_TargetDir)ThermoFisher.CommonCore.Data.dll" />
+	    </Component>
+	    <Component Id="ThermoFisher.CommonCore.RawFileReader.dll" Guid="a5a421e3-60fe-46c0-b8b4-8fe455675a76">
+	      <File Id="ThermoFisher.CommonCore.RawFileReader.dll" Name="ThermoFisher.CommonCore.RawFileReader.dll" Source="$(var.FragmentLab_TargetDir)ThermoFisher.CommonCore.RawFileReader.dll" />
+	    </Component>
+		
+		<Component Id="System.Resources.Extensions.dll" Guid="8af8355f-530d-405e-bbac-7bc20c66e913">
+			<File Id="System.Resources.Extensions.dll" Name="System.Resources.Extensions.dll" Source="$(var.FragmentLab_TargetDir)System.Resources.Extensions.dll" />
+		</Component>
+		<Component Id="System.Memory.dll" Guid="139aaaa7-2281-4707-b81b-0e64bcf7a3cc">
+			<File Id="System.Memory.dll" Name="System.Memory.dll" Source="$(var.FragmentLab_TargetDir)System.Memory.dll" />
+		</Component>
+		<Component Id="System.Runtime.CompilerServices.Unsafe.dll" Guid="48380ab6-7a13-4d6f-aa40-b45e79bce2b6">
+			<File Id="System.Runtime.CompilerServices.Unsafe.dll" Name="System.Runtime.CompilerServices.Unsafe.dll" Source="$(var.FragmentLab_TargetDir)System.Runtime.CompilerServices.Unsafe.dll" />
+		</Component>
+		<Component Id="System.Drawing.Common.dll" Guid="81ab4fd0-2554-460e-887b-3976b21a623e">
+			<File Id="System.Drawing.Common.dll" Name="System.Drawing.Common.dll" Source="$(var.FragmentLab_TargetDir)System.Drawing.Common.dll" />
+		</Component>
+		<Component Id="System.IO.Packaging.dll" Guid="3e12a780-e165-4cb6-9565-3ec276607ea4">
+			<File Id="System.IO.Packaging.dll" Name="System.IO.Packaging.dll" Source="$(var.FragmentLab_TargetDir)System.IO.Packaging.dll" />
+		</Component>
+		<Component Id="System.Numerics.Vectors.dll" Guid="6c212d9b-ebae-44fe-94ca-47e66fe02627">
+			<File Id="System.Numerics.Vectors.dll" Name="System.Numerics.Vectors.dll" Source="$(var.FragmentLab_TargetDir)System.Numerics.Vectors.dll" />
+		</Component>
+		<Component Id="System.Buffers.dll" Guid="b104915e-70d1-4aec-9dfd-e3e86235b3c5">
+			<File Id="System.Buffers.dll" Name="System.Buffers.dll" Source="$(var.FragmentLab_TargetDir)System.Buffers.dll" />
+		</Component>
+	   
+	   <Component Id="SQLite.Interop.dll_x64" Guid="b324b774-d77c-496f-8e58-405323538044">
+		   <File Id="SQLite.Interop.dll_x64" Name="SQLite.Interop.dll" Source="$(var.FragmentLab_TargetDir)x64/SQLite.Interop.dll" />
+	   </Component>
+   </ComponentGroup>
+	</Fragment>
+</Wix>

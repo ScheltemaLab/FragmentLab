@@ -1,26 +1,54 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.705
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31424.327
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FragmentLab", "FragmentLab\FragmentLab.csproj", "{D1217B8C-10FD-4EAD-AF76-9C205E005E26}"
+EndProject
+Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "Installer", "Installer\Installer.wixproj", "{404F362F-E445-4352-AEE8-F108454FA404}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		Debug|x86 = Debug|x86
 		Local|Any CPU = Local|Any CPU
+		Local|x86 = Local|x86
 		LocalCi|Any CPU = LocalCi|Any CPU
+		LocalCi|x86 = LocalCi|x86
 		Release|Any CPU = Release|Any CPU
+		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{D1217B8C-10FD-4EAD-AF76-9C205E005E26}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D1217B8C-10FD-4EAD-AF76-9C205E005E26}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D1217B8C-10FD-4EAD-AF76-9C205E005E26}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{D1217B8C-10FD-4EAD-AF76-9C205E005E26}.Debug|x86.Build.0 = Debug|Any CPU
 		{D1217B8C-10FD-4EAD-AF76-9C205E005E26}.Local|Any CPU.ActiveCfg = Release|Any CPU
 		{D1217B8C-10FD-4EAD-AF76-9C205E005E26}.Local|Any CPU.Build.0 = Release|Any CPU
+		{D1217B8C-10FD-4EAD-AF76-9C205E005E26}.Local|x86.ActiveCfg = Release|Any CPU
+		{D1217B8C-10FD-4EAD-AF76-9C205E005E26}.Local|x86.Build.0 = Release|Any CPU
 		{D1217B8C-10FD-4EAD-AF76-9C205E005E26}.LocalCi|Any CPU.ActiveCfg = Release|Any CPU
 		{D1217B8C-10FD-4EAD-AF76-9C205E005E26}.LocalCi|Any CPU.Build.0 = Release|Any CPU
+		{D1217B8C-10FD-4EAD-AF76-9C205E005E26}.LocalCi|x86.ActiveCfg = Release|Any CPU
+		{D1217B8C-10FD-4EAD-AF76-9C205E005E26}.LocalCi|x86.Build.0 = Release|Any CPU
 		{D1217B8C-10FD-4EAD-AF76-9C205E005E26}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D1217B8C-10FD-4EAD-AF76-9C205E005E26}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D1217B8C-10FD-4EAD-AF76-9C205E005E26}.Release|x86.ActiveCfg = Release|Any CPU
+		{D1217B8C-10FD-4EAD-AF76-9C205E005E26}.Release|x86.Build.0 = Release|Any CPU
+		{404F362F-E445-4352-AEE8-F108454FA404}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{404F362F-E445-4352-AEE8-F108454FA404}.Debug|x86.ActiveCfg = Debug|x86
+		{404F362F-E445-4352-AEE8-F108454FA404}.Debug|x86.Build.0 = Debug|x86
+		{404F362F-E445-4352-AEE8-F108454FA404}.Local|Any CPU.ActiveCfg = Release|x86
+		{404F362F-E445-4352-AEE8-F108454FA404}.Local|Any CPU.Build.0 = Release|x86
+		{404F362F-E445-4352-AEE8-F108454FA404}.Local|x86.ActiveCfg = Release|x86
+		{404F362F-E445-4352-AEE8-F108454FA404}.Local|x86.Build.0 = Release|x86
+		{404F362F-E445-4352-AEE8-F108454FA404}.LocalCi|Any CPU.ActiveCfg = Release|x86
+		{404F362F-E445-4352-AEE8-F108454FA404}.LocalCi|Any CPU.Build.0 = Release|x86
+		{404F362F-E445-4352-AEE8-F108454FA404}.LocalCi|x86.ActiveCfg = Release|x86
+		{404F362F-E445-4352-AEE8-F108454FA404}.LocalCi|x86.Build.0 = Release|x86
+		{404F362F-E445-4352-AEE8-F108454FA404}.Release|Any CPU.ActiveCfg = Release|x86
+		{404F362F-E445-4352-AEE8-F108454FA404}.Release|x86.ActiveCfg = Release|x86
+		{404F362F-E445-4352-AEE8-F108454FA404}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
