@@ -33,23 +33,23 @@
 			this.splitContainer2 = new System.Windows.Forms.SplitContainer();
 			this.propertiesSettings = new System.Windows.Forms.PropertyGrid();
 			this.PsmBrowser = new BrightIdeasSoftware.ObjectListView();
-			this.PeptideColumn = ((HeckLib.visualization.objectlistview.CustomOLVColumn)(new HeckLib.visualization.objectlistview.CustomOLVColumn()));
-			this.ModificationsColumn = ((HeckLib.visualization.objectlistview.CustomOLVColumn)(new HeckLib.visualization.objectlistview.CustomOLVColumn()));
-			this.ChargeColumn = ((HeckLib.visualization.objectlistview.CustomOLVColumn)(new HeckLib.visualization.objectlistview.CustomOLVColumn()));
-			this.MzColumn = ((HeckLib.visualization.objectlistview.CustomOLVColumn)(new HeckLib.visualization.objectlistview.CustomOLVColumn()));
-			this.FragmentationColumn = ((HeckLib.visualization.objectlistview.CustomOLVColumn)(new HeckLib.visualization.objectlistview.CustomOLVColumn()));
-			this.RetentionTimeColumn = ((HeckLib.visualization.objectlistview.CustomOLVColumn)(new HeckLib.visualization.objectlistview.CustomOLVColumn()));
-			this.RawFileColumn = ((HeckLib.visualization.objectlistview.CustomOLVColumn)(new HeckLib.visualization.objectlistview.CustomOLVColumn()));
-			this.MinScanColumn = ((HeckLib.visualization.objectlistview.CustomOLVColumn)(new HeckLib.visualization.objectlistview.CustomOLVColumn()));
-			this.MaxScanColumn = ((HeckLib.visualization.objectlistview.CustomOLVColumn)(new HeckLib.visualization.objectlistview.CustomOLVColumn()));
-			this.RetentionLengthColumn = ((HeckLib.visualization.objectlistview.CustomOLVColumn)(new HeckLib.visualization.objectlistview.CustomOLVColumn()));
-			this.FragmentationEnergyColumn = ((HeckLib.visualization.objectlistview.CustomOLVColumn)(new HeckLib.visualization.objectlistview.CustomOLVColumn()));
-			this.DescriptionColumn = ((HeckLib.visualization.objectlistview.CustomOLVColumn)(new HeckLib.visualization.objectlistview.CustomOLVColumn()));
-			this.ProteinsColumn = ((HeckLib.visualization.objectlistview.CustomOLVColumn)(new HeckLib.visualization.objectlistview.CustomOLVColumn()));
-			this.IntensityColumn = ((HeckLib.visualization.objectlistview.CustomOLVColumn)(new HeckLib.visualization.objectlistview.CustomOLVColumn()));
-			this.ModProbColumn = ((HeckLib.visualization.objectlistview.CustomOLVColumn)(new HeckLib.visualization.objectlistview.CustomOLVColumn()));
-			this.ScoreColumn = ((HeckLib.visualization.objectlistview.CustomOLVColumn)(new HeckLib.visualization.objectlistview.CustomOLVColumn()));
-			this.DeltaScoreColumn = ((HeckLib.visualization.objectlistview.CustomOLVColumn)(new HeckLib.visualization.objectlistview.CustomOLVColumn()));
+			this.PeptideColumn = ((HeckLib.visualization.objectlistview.HecklibOLVColumn)(new HeckLib.visualization.objectlistview.HecklibOLVColumn()));
+			this.ModificationsColumn = ((HeckLib.visualization.objectlistview.HecklibOLVColumn)(new HeckLib.visualization.objectlistview.HecklibOLVColumn()));
+			this.ProteinsColumn = ((HeckLib.visualization.objectlistview.HecklibOLVColumn)(new HeckLib.visualization.objectlistview.HecklibOLVColumn()));
+			this.ScoreColumn = ((HeckLib.visualization.objectlistview.HecklibOLVColumn)(new HeckLib.visualization.objectlistview.HecklibOLVColumn()));
+			this.MzColumn = ((HeckLib.visualization.objectlistview.HecklibOLVColumn)(new HeckLib.visualization.objectlistview.HecklibOLVColumn()));
+			this.ChargeColumn = ((HeckLib.visualization.objectlistview.HecklibOLVColumn)(new HeckLib.visualization.objectlistview.HecklibOLVColumn()));
+			this.MinScanColumn = ((HeckLib.visualization.objectlistview.HecklibOLVColumn)(new HeckLib.visualization.objectlistview.HecklibOLVColumn()));
+			this.MaxScanColumn = ((HeckLib.visualization.objectlistview.HecklibOLVColumn)(new HeckLib.visualization.objectlistview.HecklibOLVColumn()));
+			this.RetentionTimeColumn = ((HeckLib.visualization.objectlistview.HecklibOLVColumn)(new HeckLib.visualization.objectlistview.HecklibOLVColumn()));
+			this.RetentionLengthColumn = ((HeckLib.visualization.objectlistview.HecklibOLVColumn)(new HeckLib.visualization.objectlistview.HecklibOLVColumn()));
+			this.RawFileColumn = ((HeckLib.visualization.objectlistview.HecklibOLVColumn)(new HeckLib.visualization.objectlistview.HecklibOLVColumn()));
+			this.FragmentationColumn = ((HeckLib.visualization.objectlistview.HecklibOLVColumn)(new HeckLib.visualization.objectlistview.HecklibOLVColumn()));
+			this.FragmentationEnergyColumn = ((HeckLib.visualization.objectlistview.HecklibOLVColumn)(new HeckLib.visualization.objectlistview.HecklibOLVColumn()));
+			this.DescriptionColumn = ((HeckLib.visualization.objectlistview.HecklibOLVColumn)(new HeckLib.visualization.objectlistview.HecklibOLVColumn()));
+			this.IntensityColumn = ((HeckLib.visualization.objectlistview.HecklibOLVColumn)(new HeckLib.visualization.objectlistview.HecklibOLVColumn()));
+			this.ModProbColumn = ((HeckLib.visualization.objectlistview.HecklibOLVColumn)(new HeckLib.visualization.objectlistview.HecklibOLVColumn()));
+			this.DeltaScoreColumn = ((HeckLib.visualization.objectlistview.HecklibOLVColumn)(new HeckLib.visualization.objectlistview.HecklibOLVColumn()));
 			this.splitcontainerGraphs = new System.Windows.Forms.SplitContainer();
 			this.ms2SpectrumGraph1 = new HeckLib.visualization.Ms2SpectrumGraph();
 			this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
@@ -61,6 +61,8 @@
 			this.menuStrip1 = new System.Windows.Forms.MenuStrip();
 			this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.openIntoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.saveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.exportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.exportGlycoScoresToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
@@ -81,6 +83,8 @@
 			this.analyzeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.frequentflyersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.sequenceCoverageToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
+			this.openSearchToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.aboytToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.mscoreToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -206,26 +210,21 @@
 			this.ModificationsColumn.Text = "Modifications";
 			this.ModificationsColumn.Width = 85;
 			// 
-			// ChargeColumn
+			// ProteinsColumn
 			// 
-			this.ChargeColumn.Text = "Charge";
+			this.ProteinsColumn.Text = "Proteins";
+			// 
+			// ScoreColumn
+			// 
+			this.ScoreColumn.Text = "Score";
 			// 
 			// MzColumn
 			// 
 			this.MzColumn.Text = "M/Z";
 			// 
-			// FragmentationColumn
+			// ChargeColumn
 			// 
-			this.FragmentationColumn.Text = "Fragmentation";
-			this.FragmentationColumn.Width = 80;
-			// 
-			// RetentionTimeColumn
-			// 
-			this.RetentionTimeColumn.Text = "RT";
-			// 
-			// RawFileColumn
-			// 
-			this.RawFileColumn.Text = "Raw File";
+			this.ChargeColumn.Text = "Charge";
 			// 
 			// MinScanColumn
 			// 
@@ -237,11 +236,24 @@
 			this.MaxScanColumn.IsVisible = false;
 			this.MaxScanColumn.Text = "Max Scan";
 			// 
+			// RetentionTimeColumn
+			// 
+			this.RetentionTimeColumn.Text = "RT";
+			// 
 			// RetentionLengthColumn
 			// 
 			this.RetentionLengthColumn.DisplayIndex = 8;
 			this.RetentionLengthColumn.IsVisible = false;
 			this.RetentionLengthColumn.Text = "RetentionLength";
+			// 
+			// RawFileColumn
+			// 
+			this.RawFileColumn.Text = "Raw File";
+			// 
+			// FragmentationColumn
+			// 
+			this.FragmentationColumn.Text = "Fragmentation";
+			this.FragmentationColumn.Width = 80;
 			// 
 			// FragmentationEnergyColumn
 			// 
@@ -255,10 +267,6 @@
 			this.DescriptionColumn.IsVisible = false;
 			this.DescriptionColumn.Text = "Description";
 			// 
-			// ProteinsColumn
-			// 
-			this.ProteinsColumn.Text = "Proteins";
-			// 
 			// IntensityColumn
 			// 
 			this.IntensityColumn.DisplayIndex = 12;
@@ -270,10 +278,6 @@
 			this.ModProbColumn.DisplayIndex = 13;
 			this.ModProbColumn.IsVisible = false;
 			this.ModProbColumn.Text = "mod. probability";
-			// 
-			// ScoreColumn
-			// 
-			this.ScoreColumn.Text = "Score";
 			// 
 			// DeltaScoreColumn
 			// 
@@ -396,6 +400,8 @@
 			// 
 			this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.openToolStripMenuItem,
+            this.openIntoToolStripMenuItem,
+            this.saveToolStripMenuItem,
             this.exportToolStripMenuItem,
             this.toolStripSeparator1,
             this.exitToolStripMenuItem});
@@ -406,9 +412,23 @@
 			// openToolStripMenuItem
 			// 
 			this.openToolStripMenuItem.Name = "openToolStripMenuItem";
-			this.openToolStripMenuItem.Size = new System.Drawing.Size(112, 22);
-			this.openToolStripMenuItem.Text = "&Open...";
+			this.openToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
+			this.openToolStripMenuItem.Text = "&Open ...";
 			this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
+			// 
+			// openIntoToolStripMenuItem
+			// 
+			this.openIntoToolStripMenuItem.Name = "openIntoToolStripMenuItem";
+			this.openIntoToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
+			this.openIntoToolStripMenuItem.Text = "Open &into ...";
+			this.openIntoToolStripMenuItem.Click += new System.EventHandler(this.openIntoToolStripMenuItem_Click);
+			// 
+			// saveToolStripMenuItem
+			// 
+			this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
+			this.saveToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
+			this.saveToolStripMenuItem.Text = "&Save as ...";
+			this.saveToolStripMenuItem.Click += new System.EventHandler(this.saveToolStripMenuItem_Click);
 			// 
 			// exportToolStripMenuItem
 			// 
@@ -425,7 +445,7 @@
             this.exportPToolStripMenuItem,
             this.exportEncyclopeDIAToolStripMenuItem});
 			this.exportToolStripMenuItem.Name = "exportToolStripMenuItem";
-			this.exportToolStripMenuItem.Size = new System.Drawing.Size(112, 22);
+			this.exportToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
 			this.exportToolStripMenuItem.Text = "Export";
 			// 
 			// exportGlycoScoresToolStripMenuItem
@@ -502,12 +522,12 @@
 			// toolStripSeparator1
 			// 
 			this.toolStripSeparator1.Name = "toolStripSeparator1";
-			this.toolStripSeparator1.Size = new System.Drawing.Size(109, 6);
+			this.toolStripSeparator1.Size = new System.Drawing.Size(136, 6);
 			// 
 			// exitToolStripMenuItem
 			// 
 			this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-			this.exitToolStripMenuItem.Size = new System.Drawing.Size(112, 22);
+			this.exitToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
 			this.exitToolStripMenuItem.Text = "&Exit";
 			this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
 			// 
@@ -523,23 +543,25 @@
 			// modificationsToolStripMenuItem
 			// 
 			this.modificationsToolStripMenuItem.Name = "modificationsToolStripMenuItem";
-			this.modificationsToolStripMenuItem.Size = new System.Drawing.Size(196, 22);
-			this.modificationsToolStripMenuItem.Text = "&Modifications";
+			this.modificationsToolStripMenuItem.Size = new System.Drawing.Size(208, 22);
+			this.modificationsToolStripMenuItem.Text = "&Modifications ...";
 			this.modificationsToolStripMenuItem.Click += new System.EventHandler(this.modificationsToolStripMenuItem_Click);
 			// 
 			// fragmentationSettingsToolStripMenuItem
 			// 
 			this.fragmentationSettingsToolStripMenuItem.Enabled = false;
 			this.fragmentationSettingsToolStripMenuItem.Name = "fragmentationSettingsToolStripMenuItem";
-			this.fragmentationSettingsToolStripMenuItem.Size = new System.Drawing.Size(196, 22);
-			this.fragmentationSettingsToolStripMenuItem.Text = "&Fragmentation settings";
+			this.fragmentationSettingsToolStripMenuItem.Size = new System.Drawing.Size(208, 22);
+			this.fragmentationSettingsToolStripMenuItem.Text = "&Fragmentation settings ...";
 			this.fragmentationSettingsToolStripMenuItem.Click += new System.EventHandler(this.fragmentationSettingsToolStripMenuItem_Click);
 			// 
 			// analyzeToolStripMenuItem
 			// 
 			this.analyzeToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.frequentflyersToolStripMenuItem,
-            this.sequenceCoverageToolStripMenuItem});
+            this.sequenceCoverageToolStripMenuItem,
+            this.toolStripSeparator5,
+            this.openSearchToolStripMenuItem});
 			this.analyzeToolStripMenuItem.Name = "analyzeToolStripMenuItem";
 			this.analyzeToolStripMenuItem.Size = new System.Drawing.Size(60, 20);
 			this.analyzeToolStripMenuItem.Text = "&Analyze";
@@ -547,16 +569,28 @@
 			// frequentflyersToolStripMenuItem
 			// 
 			this.frequentflyersToolStripMenuItem.Name = "frequentflyersToolStripMenuItem";
-			this.frequentflyersToolStripMenuItem.Size = new System.Drawing.Size(176, 22);
-			this.frequentflyersToolStripMenuItem.Text = "Frequent &flyers";
+			this.frequentflyersToolStripMenuItem.Size = new System.Drawing.Size(188, 22);
+			this.frequentflyersToolStripMenuItem.Text = "Frequent &flyers ...";
 			this.frequentflyersToolStripMenuItem.Click += new System.EventHandler(this.frequentflyersToolStripMenuItem_Click);
 			// 
 			// sequenceCoverageToolStripMenuItem
 			// 
 			this.sequenceCoverageToolStripMenuItem.Name = "sequenceCoverageToolStripMenuItem";
-			this.sequenceCoverageToolStripMenuItem.Size = new System.Drawing.Size(176, 22);
-			this.sequenceCoverageToolStripMenuItem.Text = "&Sequence coverage";
+			this.sequenceCoverageToolStripMenuItem.Size = new System.Drawing.Size(188, 22);
+			this.sequenceCoverageToolStripMenuItem.Text = "&Sequence coverage ...";
 			this.sequenceCoverageToolStripMenuItem.Click += new System.EventHandler(this.sequenceCoverageToolStripMenuItem_Click);
+			// 
+			// toolStripSeparator5
+			// 
+			this.toolStripSeparator5.Name = "toolStripSeparator5";
+			this.toolStripSeparator5.Size = new System.Drawing.Size(185, 6);
+			// 
+			// openSearchToolStripMenuItem
+			// 
+			this.openSearchToolStripMenuItem.Name = "openSearchToolStripMenuItem";
+			this.openSearchToolStripMenuItem.Size = new System.Drawing.Size(188, 22);
+			this.openSearchToolStripMenuItem.Text = "&Open search ...";
+			this.openSearchToolStripMenuItem.Click += new System.EventHandler(this.openSearchToolStripMenuItem_Click);
 			// 
 			// helpToolStripMenuItem
 			// 
@@ -569,8 +603,8 @@
 			// aboytToolStripMenuItem
 			// 
 			this.aboytToolStripMenuItem.Name = "aboytToolStripMenuItem";
-			this.aboytToolStripMenuItem.Size = new System.Drawing.Size(107, 22);
-			this.aboytToolStripMenuItem.Text = "&About";
+			this.aboytToolStripMenuItem.Size = new System.Drawing.Size(119, 22);
+			this.aboytToolStripMenuItem.Text = "&About ...";
 			this.aboytToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
 			// 
 			// mscoreToolStripMenuItem
@@ -648,23 +682,23 @@
 		private System.Windows.Forms.ToolStripMenuItem exportMassListsToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem exportGlycoScoresToolStripMenuItem;
 		private BrightIdeasSoftware.ObjectListView PsmBrowser;
-		private HeckLib.visualization.objectlistview.CustomOLVColumn ChargeColumn;
-		private HeckLib.visualization.objectlistview.CustomOLVColumn MzColumn;
-		private HeckLib.visualization.objectlistview.CustomOLVColumn FragmentationColumn;
-		private HeckLib.visualization.objectlistview.CustomOLVColumn RetentionTimeColumn;
-		private HeckLib.visualization.objectlistview.CustomOLVColumn RawFileColumn;
-		private HeckLib.visualization.objectlistview.CustomOLVColumn DescriptionColumn;
-		private HeckLib.visualization.objectlistview.CustomOLVColumn MinScanColumn;
-		private HeckLib.visualization.objectlistview.CustomOLVColumn MaxScanColumn;
-		private HeckLib.visualization.objectlistview.CustomOLVColumn RetentionLengthColumn;
-		private HeckLib.visualization.objectlistview.CustomOLVColumn FragmentationEnergyColumn;
-		private HeckLib.visualization.objectlistview.CustomOLVColumn ProteinsColumn;
-		private HeckLib.visualization.objectlistview.CustomOLVColumn PeptideColumn;
-		private HeckLib.visualization.objectlistview.CustomOLVColumn IntensityColumn;
-		private HeckLib.visualization.objectlistview.CustomOLVColumn ModProbColumn;
-		private HeckLib.visualization.objectlistview.CustomOLVColumn ScoreColumn;
-		private HeckLib.visualization.objectlistview.CustomOLVColumn DeltaScoreColumn;
-		private HeckLib.visualization.objectlistview.CustomOLVColumn ModificationsColumn;
+		private HeckLib.visualization.objectlistview.HecklibOLVColumn ChargeColumn;
+		private HeckLib.visualization.objectlistview.HecklibOLVColumn MzColumn;
+		private HeckLib.visualization.objectlistview.HecklibOLVColumn FragmentationColumn;
+		private HeckLib.visualization.objectlistview.HecklibOLVColumn RetentionTimeColumn;
+		private HeckLib.visualization.objectlistview.HecklibOLVColumn RawFileColumn;
+		private HeckLib.visualization.objectlistview.HecklibOLVColumn DescriptionColumn;
+		private HeckLib.visualization.objectlistview.HecklibOLVColumn MinScanColumn;
+		private HeckLib.visualization.objectlistview.HecklibOLVColumn MaxScanColumn;
+		private HeckLib.visualization.objectlistview.HecklibOLVColumn RetentionLengthColumn;
+		private HeckLib.visualization.objectlistview.HecklibOLVColumn FragmentationEnergyColumn;
+		private HeckLib.visualization.objectlistview.HecklibOLVColumn ProteinsColumn;
+		private HeckLib.visualization.objectlistview.HecklibOLVColumn PeptideColumn;
+		private HeckLib.visualization.objectlistview.HecklibOLVColumn IntensityColumn;
+		private HeckLib.visualization.objectlistview.HecklibOLVColumn ModProbColumn;
+		private HeckLib.visualization.objectlistview.HecklibOLVColumn ScoreColumn;
+		private HeckLib.visualization.objectlistview.HecklibOLVColumn DeltaScoreColumn;
+		private HeckLib.visualization.objectlistview.HecklibOLVColumn ModificationsColumn;
 		private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
 		private System.Windows.Forms.SplitContainer splitcontainerGraphs;
 		private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
@@ -685,6 +719,10 @@
 		private System.Windows.Forms.ToolStripMenuItem fragmentationSettingsToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem exportEncyclopeDIAToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem sequenceCoverageToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem openSearchToolStripMenuItem;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator5;
+		private System.Windows.Forms.ToolStripMenuItem saveToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem openIntoToolStripMenuItem;
 	}
 }
 

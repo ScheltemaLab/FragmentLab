@@ -88,7 +88,7 @@ namespace FragmentLab
 				else if (File.Exists(filename + ".mgf"))
 					return new HeckLibRawFileMgf.HeckLibMgfRawFile(filename + ".mgf");
 				else if (File.Exists(filename + ".tdf"))
-					return new HeckLibRawFileBruker.HeckLibBrukerRawFile(path);
+					return new HeckLibRawFileBruker.HeckLibBrukerRawFile(path, new Tolerance(50, Tolerance.ErrorUnit.PPM), 400);
 				else if (File.Exists(filename + ".mzxml"))
 					return new HeckLibRawFileMzXml.HeckLibMzXmlRawFile(filename + ".mzxml");
 				else if (File.Exists(filename + ".mzml"))
@@ -181,14 +181,39 @@ namespace FragmentLab
 			m_pSettingsDatabase = settingsdb;
 		}
 
-		public Document(HeckLibSettingsDatabase settingsdb, string[] filenames, ImportType type, HlBackgroundWorker<Document.BackgroundWorkerData> backgroundworker)
+		public Document(HeckLibSettingsDatabase settingsdb, List<PeptideSpectrumMatch> psms, string path)
+		{
+			m_pSettingsDatabase = settingsdb;
+			m_sPath = path;
+
+			m_lPsms = new Dictionary<string, List<PeptideSpectrumMatch>>();
+			m_nNumberPsms = psms.Count;
+			foreach (PeptideSpectrumMatch psm in psms)
+			{
+				if (!m_lPsms.ContainsKey(psm.RawFile))
+					m_lPsms.Add(psm.RawFile, new List<PeptideSpectrumMatch>());
+				m_lPsms[psm.RawFile].Add(psm);
+			}
+		}
+
+		public Document(HeckLibSettingsDatabase settingsdb, string[] filenames, ImportType type, HlBackgroundWorker<Document.BackgroundWorkerData> backgroundworker, List<PeptideSpectrumMatch> old_psms)
 		{
 			m_pSettingsDatabase = settingsdb;
 			m_sPath = FilesA.GetDirectoryName(filenames[0]);
 
-			// load the psms and sort them on raw-file
+			// load the psms and sort them on raw-file; if available retain the old PSM list as well
 			m_nNumberPsms = 0;
 			m_lPsms = new Dictionary<string, List<PeptideSpectrumMatch>>();
+
+			if (old_psms != null)
+			{
+				foreach (PeptideSpectrumMatch psm in old_psms)
+				{
+					if (!m_lPsms.ContainsKey(psm.RawFile))
+						m_lPsms.Add(psm.RawFile, new List<PeptideSpectrumMatch>());
+					m_lPsms[psm.RawFile].Add(psm);
+				}
+			}
 
 			Document.BackgroundWorkerData data = new Document.BackgroundWorkerData();
 			foreach (string filename in filenames)
@@ -292,7 +317,8 @@ namespace FragmentLab
 								Charge				= record.Charge,
 								Peptide				= peptide,
 								Score				= record.Score,
-								Proteins			= record.Proteins
+								Proteins			= record.Proteins,
+								GeneNames			= record.GeneNames
 							};
 								
 						if (!m_lPsms.ContainsKey(psm.RawFile))
@@ -414,6 +440,8 @@ namespace FragmentLab
 					{
 						if (mzid_evidence.Items.Count == 0)
 							return;
+						if (!rawfiles.ContainsKey(mzid_evidence.SpectraDataRef))
+							return;
 						MzIdent.SpectrumIdentificationItem identification = mzid_evidence.Items[0];
 
 						string s = regex_number.Match(mzid_evidence.SpectrumIdentifier).Groups["scannumber"].Value;
@@ -497,7 +525,9 @@ namespace FragmentLab
 
 		public List<PeptideSpectrumMatch> GetPsms()
 		{
-			return m_lPsms.Values.SelectMany(x => x).ToList();
+			return m_lPsms != null
+				? m_lPsms.Values.SelectMany(x => x).ToList()
+				: null;
 		}
 
 		public string[] GetUniqueRawfiles()
@@ -586,6 +616,34 @@ namespace FragmentLab
 			Cursor.Current = Cursors.Default;
 
 			return precursor;
+		}
+
+		public void SavePsms(BackgroundWorkerData data, IProgress<int> progress, CancellationToken iscancelled)
+		{
+			using (CsvFileWriter<GenericFileFormat> writer = new CsvFileWriter<GenericFileFormat>(data.Filename))
+			{
+				GenericFileFormat f = new GenericFileFormat();
+
+				int psm_count = 0;
+				List<PeptideSpectrumMatch> psms = data.PsmList;
+				foreach (PeptideSpectrumMatch psm in psms) 
+				{
+					progress.Report((int)(100.0 * psm_count++ / psms.Count));
+
+					f.SpectrumFile			= psm.RawFile;
+					f.ScanNumber			= psm.MinScan;
+					f.ScanNumberString		= psm.MinScan.ToString();
+					f.RetentionTime			= psm.RetentionTime;
+					f.Mz					= psm.Mz;
+					f.Charge				= psm.Charge;
+					f.Modifications			= psm.Peptide.GetAnnotatedModifications();
+					f.Sequence				= psm.Peptide.Sequence;
+					f.FragmentationType		= psm.Fragmentation.ToString();
+					f.Score					= psm.Score;
+
+					writer.Write(f);
+				}
+			}
 		}
 		#endregion
 

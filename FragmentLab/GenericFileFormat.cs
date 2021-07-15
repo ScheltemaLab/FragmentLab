@@ -91,6 +91,8 @@ namespace FragmentLab
 		public string Modifications;
 		[CsvFileField(false, "Proteins", "Protein ID", "Protein Accessions")]
 		public string Proteins;
+		[CsvFileField(false, "Gene names")]
+		public string GeneNames;
 		[CsvFileField(false, "Activation Type", "Fragmentation")]
 		public string FragmentationType;
 		[CsvFileField(false, "Activation Energy", "Fragmentation Energy", "Energy")]
@@ -144,6 +146,10 @@ namespace FragmentLab
 						Peptide p = CreatePeptidePD(record, allmodifications);
 						detected_format = Format.PROTEOMEDISCOVERER;
 						return p;
+					}
+					catch (ModificationException e)
+					{
+						throw e;
 					}
 					catch (Exception)
 					{
@@ -232,6 +238,8 @@ namespace FragmentLab
 
 		private static Peptide CreatePeptidePD(GenericFileFormat record, Dictionary<string, Modification> allmodifications)
 		{
+			ModificationTranslator modtranslator = new ModificationTranslator(allmodifications);
+			
 			string sequence = record.Sequence.ToUpper();
 			if (sequence.Contains("."))
 			{
@@ -254,7 +262,7 @@ namespace FragmentLab
 				int position;
 				char aminoacid;
 				float probability;
-				TranslateModificationPD(mascotmod, allmodifications, out modification, out position, out aminoacid, out probability);
+				TranslateModificationPD(mascotmod, modtranslator, out modification, out position, out aminoacid, out probability);
 
 				if (position >= 0) // we hit an amino acid
 				{
@@ -271,10 +279,12 @@ namespace FragmentLab
 				}
 			}
 
-			return new Peptide { Sequence = sequence, Modifications = modifications, Nterm = nterm, Cterm = cterm };
+			Peptide p = new Peptide { Sequence = sequence, Modifications = modifications, Nterm = nterm, Cterm = cterm };
+			p.ProteinAccessions = record.Proteins.Split(';');
+			return p;
 		}
 
-		private static void TranslateModificationPD(string mascotmod, Dictionary<string, Modification> allmodifications, out Modification modification, out int position, out char aminoacid, out float probability)
+		private static void TranslateModificationPD(string mascotmod, ModificationTranslator modtranslator, out Modification modification, out int position, out char aminoacid, out float probability)
 		{
 			mascotmod = mascotmod.Trim();
 
@@ -289,7 +299,7 @@ namespace FragmentLab
 				return;
 
 			// is it an n/c terminal modification
-			Modification modterm = m_sModificationTranslator.GetModification(mascotmod);
+			Modification modterm = modtranslator.GetModification(mascotmod);
 			if (modterm != null)
 			{
 				modification = modterm;
@@ -316,9 +326,9 @@ namespace FragmentLab
 				i2++;
 			string name = mascotmod.Substring(i1, i2 - i1);
 
-			modification = m_sModificationTranslator.GetModification(name);
+			modification = modtranslator.GetModification(name);
 			if (modification == null)
-				throw new Exception("Unknown modification '" + name + "'. Please define this in the editor found in Edit -> Modifications.");
+				throw new ModificationException("Unknown modification '" + name + "'. Please define this in the editor found in Edit -> Modifications.");
 		}
 
 		private static Peptide CreatePeptideMQ(GenericFileFormat record, Dictionary<string, Modification> allmodifications)
@@ -327,6 +337,8 @@ namespace FragmentLab
 			Regex modificationFieldRegex = new Regex(@"(?:\d+ )?(.*)"); // old which failed when amino acid is not included (i.e. 2 Oxidation, Methyl): @"(?:\d+ )?(.* \(.*?\))"
 
 			//
+			if (record.Modifications == null)
+				record.Modifications = "";
 			string modification = record.Modifications.Trim();
 			if (string.IsNullOrEmpty(modification))
 				modification = "Unmodified";
@@ -429,7 +441,7 @@ namespace FragmentLab
 		private static Regex regex_fragpipe_peptide = new Regex(@"(?<position>\d+)?(?<aminoacid>.-term|\p{L})\((?<mass>\d+\.\d+)\)");
 		private static Regex regex_fragpipe_spectrum = new Regex(@"(?<rawfile>.*?(?=\.)).(?<firstscan>\d+).(?<lastscan>\d+).(?<charge>\d+)");
 
-		private static ModificationTranslator m_sModificationTranslator = new ModificationTranslator();
+		private static ModificationTranslator m_sModificationTranslator;
 		private static Dictionary<string, Modification> modificationLUT = new Dictionary<string, Modification>();
 		#endregion
 	}

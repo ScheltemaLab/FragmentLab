@@ -32,11 +32,16 @@ using HeckLib.chemistry;
 using HeckLib.backgroundworker;
 using HeckLib.objectlistview;
 
+using HeckLib.io;
+using HeckLib.io.database;
+using HeckLib.io.fileformats;
+
 using hecklib.graphics;
 using hecklib.graphics.editors;
 
 using HeckLib.visualization;
-using hecklib.visualization.propgrid;
+using HeckLib.visualization.propgrid;
+using HeckLib.visualization.objectlistview;
 
 using HeckLibWin32;
 
@@ -81,6 +86,7 @@ namespace FragmentLab
 
 			// create the columns for the peptide spectrum match selection
 			this.PsmBrowser.SelectedIndexChanged += PsmBrowser_SelectedIndexChanged;
+			this.PsmBrowser.FilterMenuBuildStrategy = new CustomFilterMenuBuilder();
 
 			this.ChargeColumn.FilterMenuBuildStrategy = new RangeFilterMenuBuilder();
 			this.ChargeColumn.AspectGetter = delegate (Object obj) {
@@ -188,10 +194,11 @@ namespace FragmentLab
 					else
 						return psm.ModificationProbabilities;
 				};
+			this.ScoreColumn.FilterMenuBuildStrategy = new RangeFilterMenuBuilder();
 			this.ScoreColumn.AspectGetter = delegate (Object obj) {
 					PeptideSpectrumMatch psm = (PeptideSpectrumMatch)obj;
 					if (psm == null)
-						return "Unknown";
+						return -1;
 					else
 						return psm.Score;
 				};
@@ -243,6 +250,16 @@ namespace FragmentLab
 		#region events
 		private void openToolStripMenuItem_Click(object sender, EventArgs e)
 		{
+			openToolStripMenuItem_helper_LoadData(false);
+		}
+
+		private void openIntoToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			openToolStripMenuItem_helper_LoadData(true);
+		}
+
+		private void openToolStripMenuItem_helper_LoadData(bool add)
+		{
 			OpenFileDialog dlg = new OpenFileDialog();
 			dlg.Filter = "Search Result Files|*.txt;*.tsv;*.csv|PepXML|*.pepXML|mzIdentML|*.mzid|" + HeckLibRawFiles.HeckLibRawFile.FileDialogExtensions;
 			dlg.FilterIndex = 1;
@@ -258,8 +275,13 @@ namespace FragmentLab
 				if (dlg.FilterIndex == 3) type = Document.ImportType.MZIDENTML;
 				if (dlg.FilterIndex == 4) type = Document.ImportType.RAW;
 
-				if (type != Document.ImportType.ERROR)
-					m_pDocument = new Document(m_pSettingsDb, dlg.FileNames, type, m_pBackgroundWorker);
+				if (type == Document.ImportType.ERROR)
+					MessageBox.Show("Unknown import type, exiting.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+				List<PeptideSpectrumMatch> old_psms = m_pDocument != null && add == true 
+						? m_pDocument.GetPsms() 
+						: null;
+				m_pDocument = new Document(m_pSettingsDb, dlg.FileNames, type, m_pBackgroundWorker, old_psms);
 
 				// if available, open the spectral predictions
 				if (!string.IsNullOrEmpty(settings.EncyclopeDIA))
@@ -283,6 +305,22 @@ namespace FragmentLab
 				boxPlot1.Clear();
 				ms2FragmentTable1.Clear();
 			}
+		}
+
+		private void saveToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			SaveFileDialog dlg = new SaveFileDialog();
+			dlg.Filter = "Search Result Files| *.txt";
+			if (dlg.ShowDialog() != DialogResult.OK)
+				return;
+
+			Document.BackgroundWorkerData data = new Document.BackgroundWorkerData();
+			data = new Document.BackgroundWorkerData {
+					Filename	= dlg.FileName,
+					Settings	= settings,
+					PsmList		= GetCurrentSetOfPsms()
+				};
+			m_pBackgroundWorker.TriggerBackgroundWorker(m_pDocument.SavePsms, data);
 		}
 
 		private void FillTree()
@@ -366,7 +404,6 @@ namespace FragmentLab
 			if (dlg.ShowDialog() != System.Windows.Forms.DialogResult.OK)
 				return;
 
-			// trigger the process
 			Document.BackgroundWorkerData data = new Document.BackgroundWorkerData();
 			data = new Document.BackgroundWorkerData {
 					Filename	= dlg.FileName,
@@ -481,7 +518,10 @@ namespace FragmentLab
 			if (psm == null)
 				return;
 			if (settings.Peptide != null)
+			{
+				psm = new PeptideSpectrumMatch(psm);
 				psm.Peptide = settings.Peptide;
+			}
 
 			SetFragmentationSpectrum(psm, false);
 		}
@@ -537,6 +577,25 @@ namespace FragmentLab
 		{
 			dialogs.DialogSequenceCoverage dlg = new dialogs.DialogSequenceCoverage(settings, m_pDocument, this.GetCurrentSetOfPsms());
 			dlg.ShowDialog();
+		}
+
+		private void openSearchToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			dialogs.DialogPeptideSearch dlg = new dialogs.DialogPeptideSearch(m_pDocument, settings, m_pSettingsDb);
+			if (dlg.ShowDialog() == DialogResult.OK)
+			{
+				m_pDocument = new Document(m_pSettingsDb, dlg.Result, m_pDocument.GetPsmPath());
+
+				// fill the tree
+				Cursor.Current = Cursors.WaitCursor;
+				FillTree();
+				Cursor.Current = Cursors.Default;
+
+				// empty out the visualizationa
+				ms2SpectrumGraph1.Clear();
+				boxPlot1.Clear();
+				ms2FragmentTable1.Clear();
+			}
 		}
 
 		private void testToolStripMenuItem_Click(object sender, EventArgs e)
@@ -598,14 +657,16 @@ namespace FragmentLab
 
 			// set the intensities for the different classes of fragments
 			Dictionary<int, List<double>> iontypeintensities = new Dictionary<int, List<double>>();
+			iontypeintensities.Add(PeptideFragment.ION_UNASSIGNED, new List<double>());
 			foreach (int iontype in PeptideFragment.ION_ALL)
 				if (model.IonTypeActive(iontype)) iontypeintensities.Add(iontype, new List<double>());
 
 			for (int i = 0; i < spectrum.Length; ++i)
 			{
 				if (matches[i] == null)
-					continue;
-				iontypeintensities[matches[i].FragmentType].Add(spectrum[i].Intensity);
+					iontypeintensities[PeptideFragment.ION_UNASSIGNED].Add(spectrum[i].Intensity);
+				else if (iontypeintensities.ContainsKey(matches[i].FragmentType))
+					iontypeintensities[matches[i].FragmentType].Add(spectrum[i].Intensity);
 			}
 
 			boxPlot1.Clear();
@@ -637,7 +698,10 @@ namespace FragmentLab
 
 					PeptideSpectrumMatch psm = new PeptideSpectrumMatch(_psm);
 					if (settings.Peptide != null)
+					{
+						psm = new PeptideSpectrumMatch(psm);
 						psm.Peptide = settings.Peptide;
+					}
 
 					int tempProgress = (++PSMProgress * 100) / psms.Count;
 					if (tempProgress > PSMPercentage)
@@ -656,6 +720,7 @@ namespace FragmentLab
 						continue;
 
 					currentSpectrum = new Ms2SpectrumGraph();
+					currentSpectrum.Font = new System.Drawing.Font(currentSpectrum.Font.FontFamily, 25);
 					model.tolerance = settings.MatchTolerance;
 					currentSpectrum.SetSpectrum(spectrum, topxranks, psm, model, settings.Ms2SpectrumSettings, noiseband: noise);
 
@@ -667,7 +732,7 @@ namespace FragmentLab
 
 
 		#region data
-		private HeckLib.io.database.HeckLibSettingsDatabase m_pSettingsDb;
+		private HeckLibSettingsDatabase m_pSettingsDb;
 
 		private Document m_pDocument = new Document(null);
 
