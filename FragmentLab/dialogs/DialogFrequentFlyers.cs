@@ -441,15 +441,15 @@ namespace FragmentLab.dialogs
 
 		private HlBackgroundWorker<Document.BackgroundWorkerData> m_pBackgroundWorker = new HlBackgroundWorker<Document.BackgroundWorkerData>();
 
-		private CustomOLVColumn colMzDiff_Mz = new CustomOLVColumn();
-		private CustomOLVColumn colMzDiff_Frequency = new CustomOLVColumn();
-		private CustomOLVColumn colMzDiff_Intensity = new CustomOLVColumn();
-		private CustomOLVColumn colMzDiff_Annotation = new CustomOLVColumn();
+		private HecklibOLVColumn colMzDiff_Mz = new HecklibOLVColumn();
+		private HecklibOLVColumn colMzDiff_Frequency = new HecklibOLVColumn();
+		private HecklibOLVColumn colMzDiff_Intensity = new HecklibOLVColumn();
+		private HecklibOLVColumn colMzDiff_Annotation = new HecklibOLVColumn();
 
-		private CustomOLVColumn colMz_Mz = new CustomOLVColumn();
-		private CustomOLVColumn colMz_Frequency = new CustomOLVColumn();
-		private CustomOLVColumn colMz_Intensity = new CustomOLVColumn();
-		private CustomOLVColumn colMz_Annotation = new CustomOLVColumn();
+		private HecklibOLVColumn colMz_Mz = new HecklibOLVColumn();
+		private HecklibOLVColumn colMz_Frequency = new HecklibOLVColumn();
+		private HecklibOLVColumn colMz_Intensity = new HecklibOLVColumn();
+		private HecklibOLVColumn colMz_Annotation = new HecklibOLVColumn();
 		#endregion
 	}
 }

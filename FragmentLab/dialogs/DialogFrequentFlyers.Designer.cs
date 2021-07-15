@@ -219,7 +219,7 @@
 			// 
 			// numSignificanceMzs
 			// 
-			this.numSignificanceMzs.DecimalPlaces = 5;
+			this.numSignificanceMzs.DecimalPlaces = 10;
 			this.numSignificanceMzs.Increment = new decimal(new int[] {
             1,
             0,
@@ -247,7 +247,7 @@
 			// 
 			// numSignificanceMzDiffs
 			// 
-			this.numSignificanceMzDiffs.DecimalPlaces = 5;
+			this.numSignificanceMzDiffs.DecimalPlaces = 10;
 			this.numSignificanceMzDiffs.Increment = new decimal(new int[] {
             1,
             0,

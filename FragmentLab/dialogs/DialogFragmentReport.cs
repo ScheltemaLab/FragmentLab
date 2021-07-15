@@ -114,8 +114,8 @@ namespace FragmentLab.dialogs
 				});
 		}
 
-		private CustomOLVColumn colRawFileName = new CustomOLVColumn();
-		private CustomOLVColumn colRawFilePsms = new CustomOLVColumn();
+		private HecklibOLVColumn colRawFileName = new HecklibOLVColumn();
+		private HecklibOLVColumn colRawFilePsms = new HecklibOLVColumn();
 		#endregion
 
 
