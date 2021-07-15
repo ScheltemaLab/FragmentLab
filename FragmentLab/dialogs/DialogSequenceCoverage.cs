@@ -46,6 +46,8 @@ using HeckLib.io.database;
 using HeckLib.visualization.propgrid;
 using HeckLib.visualization.objectlistview;
 
+using HeckLibWin32;
+
 
 
 
@@ -54,8 +56,40 @@ namespace FragmentLab.dialogs
 {
 	public partial class DialogSequenceCoverage : Form
 	{
+		private class ProteaseStringConverter : StringConverter
+		{
+			#region constructor(s)
+			public ProteaseStringConverter()
+			{
+				foreach (Protease p in Protease.Proteases)
+					m_dProteases.Add(p.Title, p);
+			}
+			#endregion
+
+			#region StringConverter overrides
+			public override bool GetStandardValuesSupported(ITypeDescriptorContext context) { return true; }
+
+			public override bool GetStandardValuesExclusive(ITypeDescriptorContext context) { return true; }
+
+			public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
+			{
+				return new StandardValuesCollection(Protease.Proteases);
+			}
+
+			public override object ConvertFrom(ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value)
+			{
+				return m_dProteases[value.ToString()];
+			}
+			#endregion
+
+			#region data
+			private Dictionary<string, Protease> m_dProteases = new Dictionary<string, Protease>();
+			#endregion
+		}
+
 		private class Settings
 		{
+			// general
 			[Category("1. General")]
 			[DisplayName("FASTA file")]
 			[Description("The fasta file used for identifying the PSMs.")]
@@ -82,6 +116,12 @@ namespace FragmentLab.dialogs
 			[Description("When set to true the fragment spectra are analyzed on the fly to see which amino acids where actually covered by the underlying fragmentation scans. Please note, this has a speed impact.")]
 			public Font MultiLineFont { get; set; }
 
+			[Category("1. General")]
+			[DisplayName("Amino acid properties")]
+			[Description("When set to true, the amino acids are colored according to their chemical properties.")]
+			public bool AminoAcidProperties { get; set; }
+
+			// filters
 			[Category("2. Filters")]
 			[DisplayName("Raw files")]
 			[EditorBrowsable(EditorBrowsableState.Never)]
@@ -95,11 +135,39 @@ namespace FragmentLab.dialogs
 			[Editor(typeof(CheckedListEditor.TypeEditor), typeof(System.Drawing.Design.UITypeEditor))]
 			[Description(".")]
 			public List<Tuple<object, bool>> Modifications { get; set; }
+
+			// protease coverage
+			[Category("2. Protease coverage")]
+			[DisplayName("Active")]
+			[Description(".")]
+			public bool Active { get; set; }
+
+			[Category("2. Protease coverage")]
+			[DisplayName("Protease")]
+			[TypeConverter(typeof(ProteaseStringConverter))]
+			[Description(".")]
+			public Protease Protease { get; set; }
+
+			[Category("2. Protease coverage")]
+			[DisplayName("Missed cleavages")]
+			[Description(".")]
+			public int MissedCleavages { get; set; }
+
+			[Category("2. Protease coverage")]
+			[DisplayName("Minimum length")]
+			[Description(".")]
+			public int MinLength { get; set; }
+
+			[Category("2. Protease coverage")]
+			[DisplayName("Maximum length")]
+			[Description(".")]
+			public int MaxLength { get; set; }
 		}
 
 		private class ProteinData
 		{
 			public string Accession;
+			public HashSet<string> GeneNames;
 			public string Sequence;
 			public string Description;
 			public double SequenceCoverage;
@@ -121,13 +189,27 @@ namespace FragmentLab.dialogs
 			m_pFragmentLabSettings = settings;
 
 			// settings
-			m_pSettings.MultiLineFont = sequenceCoverageView.LabelFont;
-			m_pSettings.AdaptiveSpacing = sequenceCoverageView.AdaptiveSpacing;
-			propertySettings.SelectedObject = m_pSettings;
-			propertySettings.PropertyValueChanged += PropertySettings_PropertyValueChanged;
+			propertySettings.PropertySort			= PropertySort.Categorized;
+			m_pSettings.DisplayMode					= hecklib.graphics.controls.SequenceCoverageView.DisplayMode.MultiLine;
+			m_pSettings.MultiLineFont				= sequenceCoverageView.LabelFont;
+			m_pSettings.AdaptiveSpacing				= sequenceCoverageView.AdaptiveSpacing;
+			m_pSettings.AminoAcidProperties			= sequenceCoverageView.AminoAcidProperties;
+			m_pSettings.MissedCleavages				= 2;
+			m_pSettings.MinLength					= 5;
+			m_pSettings.MaxLength					= 50;
+			m_pSettings.Protease					= Protease.Proteases[Protease.TrypsinP];
+
+			propertySettings.SelectedObject			= m_pSettings;
+			propertySettings.PropertyValueChanged	+= PropertySettings_PropertyValueChanged;
+
+			propertySettings.SelectGridItem("FASTA File");
+
+			sequenceCoverageView.CurrentDisplayMode = hecklib.graphics.controls.SequenceCoverageView.DisplayMode.MultiLine;
 
 			// activate the listPsms columns
 			{
+				this.listPsms.FilterMenuBuildStrategy = new CustomFilterMenuBuilder();
+				
 				this.colListPsms_accession.Text = "Accession";
 				this.colListPsms_accession.Width = 100;
 				this.colListPsms_accession.FilterMenuBuildStrategy = new RangeFilterMenuBuilder();
@@ -139,6 +221,18 @@ namespace FragmentLab.dialogs
 							return entry.Accession;
 					};
 				this.listPsms.AllColumns.Add(this.colListPsms_accession);
+
+				this.colListPsms_genename.Text = "Gene name";
+				this.colListPsms_genename.Width = 100;
+				this.colListPsms_genename.FilterMenuBuildStrategy = new RangeFilterMenuBuilder();
+				this.colListPsms_genename.AspectGetter = delegate (Object obj) {
+						ProteinData entry = (ProteinData)obj;
+						if (entry == null)
+							return "";
+						else
+							return String.Join(",", entry.GeneNames.ToArray());
+					};
+				this.listPsms.AllColumns.Add(this.colListPsms_genename);
 
 				this.colListPsms_NumberPsms.Text = "Number PSMs";
 				this.colListPsms_NumberPsms.Width = 80;
@@ -167,10 +261,11 @@ namespace FragmentLab.dialogs
 				this.listPsms.AllColumns.Add(this.colListPsms_SequenceCoverage);
 
 				this.listPsms.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-					colListPsms_accession,
-					colListPsms_NumberPsms,
-					colListPsms_SequenceCoverage
-				});
+						colListPsms_accession,
+						colListPsms_genename,
+						colListPsms_NumberPsms,
+						colListPsms_SequenceCoverage
+					});
 			}
 
 			// record the information passed along
@@ -394,14 +489,23 @@ namespace FragmentLab.dialogs
 						return;
 					if (!accession_to_psm.ContainsKey(accession))
 						return;
-					data.protein_mapping.Add(accession, new ProteinData { Accession = accession, Description = description, Sequence = sequence, Psms = accession_to_psm[accession], SequenceCoverage = -1 });
+					data.protein_mapping.Add(accession, new ProteinData { Accession = accession, GeneNames = new HashSet<string>(), Description = description, Sequence = sequence, Psms = accession_to_psm[accession], SequenceCoverage = -1 });
 				});
 
 			foreach (ProteinData p in data.protein_mapping.Values)
 			{
 				// calculate the protein position where this is not known
 				foreach (PeptideSpectrumMatch psm in p.Psms)
-					if (psm.Peptide.Position == -1) psm.Peptide.Position = p.Sequence.IndexOf(psm.Peptide.Sequence);
+				{
+					if (psm.GeneNames != null)
+					{
+						string[] allnames = psm.GeneNames.Split(new char[] { ',', ';' });
+						foreach (string n in allnames)
+							p.GeneNames.Add(n);
+					}
+					if (psm.Peptide.Position == -1)
+						psm.Peptide.Position = p.Sequence.IndexOf(psm.Peptide.Sequence);
+				}
 
 				bool[][] identified_at_level;
 				Modification[][] modification_at_level;
@@ -469,7 +573,9 @@ namespace FragmentLab.dialogs
 					m_bgwSequenceCoverage.TriggerBackgroundWorker(CalculateSequenceCoverages, data);
 
 					Cursor.Current = Cursors.WaitCursor;
+					listPsms.BeginUpdate();
 					listPsms.Objects = data.protein_mapping.Values;
+					listPsms.EndUpdate();
 					Cursor.Current = Cursors.Default;
 				}
 				else if (e.ChangedItem.Label == "Display mode")
@@ -494,6 +600,13 @@ namespace FragmentLab.dialogs
 					sequenceCoverageView.AdaptiveSpacing = m_pSettings.AdaptiveSpacing;
 					listPsms_SelectedIndexChanged(null, null);
 				}
+				else if (e.ChangedItem.Label == "Amino acid properties")
+				{
+					sequenceCoverageView.AminoAcidProperties = m_pSettings.AminoAcidProperties;
+					listPsms_SelectedIndexChanged(null, null);
+				}
+				else
+					listPsms_SelectedIndexChanged(null, null);
 			}
 			catch (Exception ex)
 			{
@@ -536,12 +649,63 @@ namespace FragmentLab.dialogs
 				covered_by_fragments = p.CoveredByFragments;
 			}
 
-			this.sequenceCoverageView.SetData(p.Accession, p.Description, p.Sequence, psms.ToArray(), m_hUniqueModifications.ToArray(), active_modifications.ToArray(), covered_by_fragments);
+			// get the peptides
+			bool[] cleavage_positions = null;
+			bool[] covered_by_insilico_peptides = null;
+			if (m_pSettings.Active)
+			{
+				Peptide[] peptides = m_pSettings.Protease.Digest(p.Sequence, m_pSettings.MissedCleavages, m_pSettings.MinLength, m_pSettings.MaxLength);
+
+				cleavage_positions = new bool[p.Sequence.Length];
+				covered_by_insilico_peptides = new bool[p.Sequence.Length];
+				foreach (Peptide peptide in peptides)
+				{
+					cleavage_positions[peptide.Position + peptide.Length - 1] = true;
+					for (int i = peptide.Position; i < peptide.Position + peptide.Length; ++i)
+						covered_by_insilico_peptides[i] = true;
+				}
+			}
+
+			// draw
+			this.sequenceCoverageView.SetData(
+					p.Accession, 
+					p.Description, 
+					p.Sequence, 
+					psms.ToArray(), 
+					m_hUniqueModifications.ToArray(), 
+					active_modifications.ToArray(), 
+					covered_by_fragments, 
+					covered_by_insilico_peptides,
+					cleavage_positions
+				);
 		}
 
 		private void CheckedListRawfiles_MouseUp(object sender, MouseEventArgs e)
 		{
 			listPsms_SelectedIndexChanged(null, null);
+		}
+
+		private void toolExportPdf_Click(object sender, EventArgs e)
+		{
+			SaveFileDialog dlg = new SaveFileDialog();
+			dlg.DefaultExt = ".pdf";
+			dlg.Filter = "Adobe PDF|*.pdf";
+			if (dlg.ShowDialog() != DialogResult.OK)
+				return;
+
+			using (PDFMaker maker = new PDFMaker(dlg.FileName))
+			{
+				Font old_font = this.sequenceCoverageView.Font;
+				Font old_label_font = this.sequenceCoverageView.LabelFont;
+
+				this.sequenceCoverageView.Font = new Font(this.sequenceCoverageView.Font.FontFamily, 23);
+				this.sequenceCoverageView.LabelFont = new Font(this.sequenceCoverageView.Font.FontFamily, 23);
+
+				maker.InsertGDIPLUSDrawing(CreateGraphics(), this.sequenceCoverageView.PrintPaint);
+
+				this.sequenceCoverageView.Font = old_font;
+				this.sequenceCoverageView.LabelFont = old_label_font;
+			}
 		}
 		#endregion
 
@@ -558,9 +722,10 @@ namespace FragmentLab.dialogs
 		private HlBackgroundWorker<SequenceCoverageData> m_bgwSequenceCoverage = new HlBackgroundWorker<SequenceCoverageData>();
 		private HlBackgroundWorker<FragmentCoverageData> m_bgwFragmentCoverage = new HlBackgroundWorker<FragmentCoverageData>();
 
-		private CustomOLVColumn colListPsms_accession = new CustomOLVColumn();
-		private CustomOLVColumn colListPsms_NumberPsms = new CustomOLVColumn();
-		private CustomOLVColumn colListPsms_SequenceCoverage = new CustomOLVColumn();
+		private HecklibOLVColumn colListPsms_accession = new HecklibOLVColumn();
+		private HecklibOLVColumn colListPsms_genename = new HecklibOLVColumn();
+		private HecklibOLVColumn colListPsms_NumberPsms = new HecklibOLVColumn();
+		private HecklibOLVColumn colListPsms_SequenceCoverage = new HecklibOLVColumn();
 		#endregion
 	}
 }
