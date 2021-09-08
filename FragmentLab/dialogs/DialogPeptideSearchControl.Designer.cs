@@ -29,8 +29,11 @@
 		private void InitializeComponent()
 		{
 			this.panel1 = new System.Windows.Forms.Panel();
+			this.numMinScore = new System.Windows.Forms.NumericUpDown();
+			this.lblMinScore = new System.Windows.Forms.Label();
 			this.tabControl1 = new System.Windows.Forms.TabControl();
 			this.tabPeptide = new System.Windows.Forms.TabPage();
+			//this.ctrlPeptideEditor = new HeckLib.graphics.controls.PeptideEditorControl();
 			this.tabProtein = new System.Windows.Forms.TabPage();
 			this.editorType = new System.Windows.Forms.ComboBox();
 			this.editorModification = new System.Windows.Forms.ComboBox();
@@ -46,17 +49,19 @@
 			this.lblProteinSequence = new System.Windows.Forms.Label();
 			this.btnOk = new System.Windows.Forms.Button();
 			this.btnCancel = new System.Windows.Forms.Button();
-			this.lblMinScore = new System.Windows.Forms.Label();
-			this.numMinScore = new System.Windows.Forms.NumericUpDown();
+			this.lblParseFullFile = new System.Windows.Forms.Label();
+			this.chkParseFullFiles = new System.Windows.Forms.CheckBox();
 			this.panel1.SuspendLayout();
+			((System.ComponentModel.ISupportInitialize)(this.numMinScore)).BeginInit();
 			this.tabControl1.SuspendLayout();
 			this.tabPeptide.SuspendLayout();
 			this.tabProtein.SuspendLayout();
-			((System.ComponentModel.ISupportInitialize)(this.numMinScore)).BeginInit();
 			this.SuspendLayout();
 			// 
 			// panel1
 			// 
+			this.panel1.Controls.Add(this.chkParseFullFiles);
+			this.panel1.Controls.Add(this.lblParseFullFile);
 			this.panel1.Controls.Add(this.numMinScore);
 			this.panel1.Controls.Add(this.lblMinScore);
 			this.panel1.Controls.Add(this.tabControl1);
@@ -65,8 +70,30 @@
 			this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.panel1.Location = new System.Drawing.Point(0, 0);
 			this.panel1.Name = "panel1";
-			this.panel1.Size = new System.Drawing.Size(347, 276);
+			this.panel1.Size = new System.Drawing.Size(347, 326);
 			this.panel1.TabIndex = 0;
+			// 
+			// numMinScore
+			// 
+			this.numMinScore.DecimalPlaces = 1;
+			this.numMinScore.Location = new System.Drawing.Point(91, 247);
+			this.numMinScore.Name = "numMinScore";
+			this.numMinScore.Size = new System.Drawing.Size(64, 20);
+			this.numMinScore.TabIndex = 6;
+			this.numMinScore.Value = new decimal(new int[] {
+            25,
+            0,
+            0,
+            0});
+			// 
+			// lblMinScore
+			// 
+			this.lblMinScore.AutoSize = true;
+			this.lblMinScore.Location = new System.Drawing.Point(4, 250);
+			this.lblMinScore.Name = "lblMinScore";
+			this.lblMinScore.Size = new System.Drawing.Size(53, 13);
+			this.lblMinScore.TabIndex = 5;
+			this.lblMinScore.Text = "Min score";
 			// 
 			// tabControl1
 			// 
@@ -225,7 +252,7 @@
 			// 
 			// btnOk
 			// 
-			this.btnOk.Location = new System.Drawing.Point(188, 245);
+			this.btnOk.Location = new System.Drawing.Point(187, 291);
 			this.btnOk.Name = "btnOk";
 			this.btnOk.Size = new System.Drawing.Size(75, 23);
 			this.btnOk.TabIndex = 2;
@@ -235,7 +262,7 @@
 			// 
 			// btnCancel
 			// 
-			this.btnCancel.Location = new System.Drawing.Point(269, 245);
+			this.btnCancel.Location = new System.Drawing.Point(268, 291);
 			this.btnCancel.Name = "btnCancel";
 			this.btnCancel.Size = new System.Drawing.Size(75, 23);
 			this.btnCancel.TabIndex = 3;
@@ -243,33 +270,29 @@
 			this.btnCancel.UseVisualStyleBackColor = true;
 			this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
 			// 
-			// lblMinScore
+			// lblParseFullFile
 			// 
-			this.lblMinScore.AutoSize = true;
-			this.lblMinScore.Location = new System.Drawing.Point(4, 250);
-			this.lblMinScore.Name = "lblMinScore";
-			this.lblMinScore.Size = new System.Drawing.Size(53, 13);
-			this.lblMinScore.TabIndex = 5;
-			this.lblMinScore.Text = "Min score";
+			this.lblParseFullFile.AutoSize = true;
+			this.lblParseFullFile.Location = new System.Drawing.Point(4, 275);
+			this.lblParseFullFile.Name = "lblParseFullFile";
+			this.lblParseFullFile.Size = new System.Drawing.Size(77, 13);
+			this.lblParseFullFile.TabIndex = 7;
+			this.lblParseFullFile.Text = "Parse full file(s)";
 			// 
-			// numMinScore
+			// chkParseFullFiles
 			// 
-			this.numMinScore.DecimalPlaces = 1;
-			this.numMinScore.Location = new System.Drawing.Point(62, 247);
-			this.numMinScore.Name = "numMinScore";
-			this.numMinScore.Size = new System.Drawing.Size(64, 20);
-			this.numMinScore.TabIndex = 6;
-			this.numMinScore.Value = new decimal(new int[] {
-            25,
-            0,
-            0,
-            0});
+			this.chkParseFullFiles.AutoSize = true;
+			this.chkParseFullFiles.Location = new System.Drawing.Point(91, 275);
+			this.chkParseFullFiles.Name = "chkParseFullFiles";
+			this.chkParseFullFiles.Size = new System.Drawing.Size(15, 14);
+			this.chkParseFullFiles.TabIndex = 8;
+			this.chkParseFullFiles.UseVisualStyleBackColor = true;
 			// 
 			// DialogPeptideSearch
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(347, 276);
+			this.ClientSize = new System.Drawing.Size(347, 326);
 			this.Controls.Add(this.panel1);
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
 			this.MaximizeBox = false;
@@ -278,11 +301,11 @@
 			this.Text = "Open search";
 			this.panel1.ResumeLayout(false);
 			this.panel1.PerformLayout();
+			((System.ComponentModel.ISupportInitialize)(this.numMinScore)).EndInit();
 			this.tabControl1.ResumeLayout(false);
 			this.tabPeptide.ResumeLayout(false);
 			this.tabProtein.ResumeLayout(false);
 			this.tabProtein.PerformLayout();
-			((System.ComponentModel.ISupportInitialize)(this.numMinScore)).EndInit();
 			this.ResumeLayout(false);
 
 		}
@@ -310,5 +333,7 @@
 		private System.Windows.Forms.ComboBox editorModification;
 		private System.Windows.Forms.NumericUpDown numMinScore;
 		private System.Windows.Forms.Label lblMinScore;
+		private System.Windows.Forms.CheckBox chkParseFullFiles;
+		private System.Windows.Forms.Label lblParseFullFile;
 	}
 }

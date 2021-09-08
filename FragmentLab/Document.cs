@@ -540,6 +540,13 @@ namespace FragmentLab
 			return m_lPsms[rawfile].ToArray();
 		}
 
+		public HeckLibRawFiles.HeckLibRawFile GetRawFile(string rawfile)
+		{
+			if (!OpenRawfileStream(new PeptideSpectrumMatch { RawFile = rawfile }))
+				return null;
+			return m_pCurrentRawFile;
+		}
+
 		public Centroid[] LoadSpectrum(PeptideSpectrumMatch psm, FragmentLabSettings settings, out int[] topxranks, out PeptideFragment.FragmentModel model, out INoiseDistribution noise, out PrecursorInfo precursor, out ScanHeader scanheader)
 		{
 			Centroid[] spectrum;
@@ -575,13 +582,13 @@ namespace FragmentLab
 				scanheader = m_pCurrentRawFile.GetScanHeader(psm.MinScan);
 				Centroid[] centroids = m_pCurrentRawFile.GetSpectrum(m_pCurrentRawFile.GetScanNumber(psm.MinScan, psm.ImsIndex), out noise);
 
-				// filter S/N
-				centroids = SpectrumUtils.FilterForSignalToNoise(centroids, settings.SignalToNoise);
-				centroids = SpectrumUtils.FilterForBasepeak(centroids, settings.PercentOfBasepeak / 100);
-
 				// detect isotopes
 				IsotopePattern[] isotopes = IsotopePatternDetection.Process(centroids, new IsotopePatternDetection.Settings { MaxCharge = (short)(psm.Charge + 1) });
 				centroids = SpectrumUtils.Deisotope(centroids, isotopes, psm.Charge, true);
+
+				// filter S/N
+				centroids = SpectrumUtils.FilterForSignalToNoise(centroids, settings.SignalToNoise);
+				centroids = SpectrumUtils.FilterForBasepeak(centroids, settings.PercentOfBasepeak / 100);
 
 				// load the fragmentation model
 				Spectrum.FragmentationType fragtype = Spectrum.FragmentationType.CID;

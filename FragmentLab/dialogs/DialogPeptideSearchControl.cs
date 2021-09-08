@@ -317,80 +317,65 @@ namespace FragmentLab.dialogs
 			List<PeptideSpectrumMatch> resulting_psms = new List<PeptideSpectrumMatch>();
 
 			int nr_psms = 0;
-			foreach (PeptideSpectrumMatch base_psm in base_psms)
+			if (chkParseFullFiles.Checked)
 			{
-				progress.Report((int)(100.0 * nr_psms++ / base_psms.Count));
+				// detect the different raw-files
+				HashSet<string> rawfilenames = new HashSet<string>();
+				foreach (PeptideSpectrumMatch psm in base_psms)
+					rawfilenames.Add(psm.RawFile);
 
-				int[] topxranks;
-				PeptideFragment.FragmentModel model;
-				INoiseDistribution noise; PrecursorInfo precursor; ScanHeader scanheader;
-				Centroid[] spectrum = m_pDocument.LoadSpectrum(base_psm, m_pSettings, out topxranks, out model, out noise, out precursor, out scanheader);
-				if (spectrum.Length < 5)
-					continue;
-
-				// de-de-isotope
-				for (int i = 0; i < spectrum.Length; ++i)
-					if (spectrum[i].Charge != 0 && spectrum[i].Charge != 1) spectrum[i].Mz = MassSpectrometry.Recharge(spectrum[i].Mz, 1, spectrum[i].Charge);
-
-				double[] mzs; float[] intensities;
-				Centroid.GetMzsIntensities(spectrum, out mzs, out intensities);
-				float maxintensity = Statistics.Max(intensities);
-				for (int i = 0; i < intensities.Length; ++i)
-					intensities[i] = 1 + (float)Math.Round(99 * intensities[i] / maxintensity);
-
-				// match our peptide against the spectrum
-				Dictionary<uint, PeptideMatchInfo> matches = new Dictionary<uint, PeptideMatchInfo>();
-				for (int i = 0; i < spectrum.Length; ++i)
+				// check how many files we need to plow through
+				int scancount = 0;
+				foreach (string rawfilename in rawfilenames)
 				{
-					uint[] matching_peptideids; byte[] matched_fragmenttype;
-					fragmentindex.MatchFragment(m_pSettings.MatchTolerance, spectrum[i].Mz, spectrum[i].Charge, null, out matching_peptideids, out matched_fragmenttype);
+					HeckLibRawFiles.HeckLibRawFile rawfile = m_pDocument.GetRawFile(rawfilename);
+					if (rawfile == null)
+						continue;
+					scancount += rawfile.LastSpectrumNumber() - rawfile.FirstSpectrumNumber() + 1;
+				}
 
-					for (int idx = 0; idx < matching_peptideids.Length; ++idx)
+				// go through the files
+				foreach (string rawfilename in rawfilenames)
+				{
+					HeckLibRawFiles.HeckLibRawFile rawfile = m_pDocument.GetRawFile(rawfilename);
+					if (rawfile == null)
+						continue;
+
+					int minscannumber = rawfile.FirstSpectrumNumber();
+					int maxscannumber = rawfile.LastSpectrumNumber();
+					for (int scannumber = minscannumber; scannumber <= maxscannumber; ++scannumber)
 					{
-						if (!matches.ContainsKey(matching_peptideids[idx]))
-							matches.Add(matching_peptideids[idx], new PeptideMatchInfo { PeptideId = matching_peptideids[idx] });
-						
-						if (matched_fragmenttype[idx] == PeptideFragment.ION_B)
-						{
-							matches[matching_peptideids[idx]].N_b++;
-							matches[matching_peptideids[idx]].sumI_b += (int)intensities[i];
-						}
-						else if (matched_fragmenttype[idx] == PeptideFragment.ION_Y)
-						{
-							matches[matching_peptideids[idx]].N_y++;
-							matches[matching_peptideids[idx]].sumI_y += (int)intensities[i];
-						}
+						progress.Report((int)(100.0 * nr_psms++ / scancount));
+						ScanHeader header = rawfile.GetScanHeader(scannumber);
+						if (header == null || header.ScanType != Spectrum.ScanType.MSn)
+							continue;
+						PrecursorInfo precursorinfo = rawfile.GetPrecursorInfo(scannumber);
+
+						PeptideSpectrumMatch base_psm = new PeptideSpectrumMatch { RawFile = rawfilename, MinScan = scannumber, Charge = precursorinfo.Charge == 0 ? (short)3 : precursorinfo.Charge };
+
+						int[] topxranks;
+						PeptideFragment.FragmentModel model;
+						INoiseDistribution noise; PrecursorInfo precursor; ScanHeader scanheader;
+						Centroid[] spectrum = m_pDocument.LoadSpectrum(base_psm, m_pSettings, out topxranks, out model, out noise, out precursor, out scanheader);
+						if (spectrum.Length < 5)
+							continue;
+						Process_analyze_spectrum(data, base_psm, precursor, spectrum, targetdb, fragmentindex, resulting_psms);
 					}
 				}
-
-				List<PeptideSpectrumMatch> psms = new List<PeptideSpectrumMatch>();
-				foreach (PeptideMatchInfo match in matches.Values)
+			}
+			else
+			{
+				foreach (PeptideSpectrumMatch base_psm in base_psms)
 				{
-					if (match.N_b < 2 || match.N_y < 2)
-						continue;
-					double score = SpectrumUtils.CalcHyperScore_by(match.N_b, match.N_y, match.sumI_b, match.sumI_y);
-					if (score < data.MinScore)
-						continue;
+					progress.Report((int)(100.0 * nr_psms++ / base_psms.Count));
 
-					// store this as a psm
-					Peptide[] p = targetdb.GetModifiedPeptidesFromIds(new int[] { (int)match.PeptideId });
-
-					PeptideSpectrumMatch psm = new PeptideSpectrumMatch {
-							RawFile				= base_psm.RawFile,
-							Mz					= base_psm.Mz,
-							Charge				= base_psm.Charge,
-							MinScan				= base_psm.MinScan,
-							RetentionTime		= base_psm.RetentionTime,
-							Peptide				= p[0],
-							Score				= score,
-							Fragmentation		= precursor.Fragmentation
-						};
-					psms.Add(psm);
-				}
-				if (psms.Count > 0)
-				{
-					psms.Sort((a, b) => -a.Score.CompareTo(b.Score));
-					resulting_psms.Add(psms[0]);
+					int[] topxranks;
+					PeptideFragment.FragmentModel model;
+					INoiseDistribution noise; PrecursorInfo precursor; ScanHeader scanheader;
+					Centroid[] spectrum = m_pDocument.LoadSpectrum(base_psm, m_pSettings, out topxranks, out model, out noise, out precursor, out scanheader);
+					if (spectrum.Length < 5)
+						continue;
+					Process_analyze_spectrum(data, base_psm, precursor, spectrum, targetdb, fragmentindex, resulting_psms);
 				}
 			}
 			m_lResult = resulting_psms;
@@ -398,6 +383,74 @@ namespace FragmentLab.dialogs
 			// destroy the temporary database
 			targetdb.Dispose();
 			FilesA.DeleteDirectory(dbpath);
+		}
+
+		private void Process_analyze_spectrum(PeptideSearchData data, PeptideSpectrumMatch base_psm, PrecursorInfo precursor, Centroid[] spectrum, OpenSearchDatabase targetdb, FragmentIndex fragmentindex, List<PeptideSpectrumMatch> resulting_psms)
+		{
+			// de-de-isotope
+			for (int i = 0; i < spectrum.Length; ++i)
+				if (spectrum[i].Charge != 0 && spectrum[i].Charge != 1) spectrum[i].Mz = MassSpectrometry.Recharge(spectrum[i].Mz, 1, spectrum[i].Charge);
+
+			double[] mzs; float[] intensities;
+			Centroid.GetMzsIntensities(spectrum, out mzs, out intensities);
+			float maxintensity = Statistics.Max(intensities);
+			for (int i = 0; i < intensities.Length; ++i)
+				intensities[i] = 1 + (float)Math.Round(99 * intensities[i] / maxintensity);
+
+			// match our peptide against the spectrum
+			Dictionary<uint, PeptideMatchInfo> matches = new Dictionary<uint, PeptideMatchInfo>();
+			for (int i = 0; i < spectrum.Length; ++i)
+			{
+				uint[] matching_peptideids; byte[] matched_fragmenttype;
+				fragmentindex.MatchFragment(m_pSettings.MatchTolerance, spectrum[i].Mz, spectrum[i].Charge, null, out matching_peptideids, out matched_fragmenttype);
+
+				for (int idx = 0; idx < matching_peptideids.Length; ++idx)
+				{
+					if (!matches.ContainsKey(matching_peptideids[idx]))
+						matches.Add(matching_peptideids[idx], new PeptideMatchInfo { PeptideId = matching_peptideids[idx] });
+						
+					if (matched_fragmenttype[idx] == PeptideFragment.ION_B)
+					{
+						matches[matching_peptideids[idx]].N_b++;
+						matches[matching_peptideids[idx]].sumI_b += (int)intensities[i];
+					}
+					else if (matched_fragmenttype[idx] == PeptideFragment.ION_Y)
+					{
+						matches[matching_peptideids[idx]].N_y++;
+						matches[matching_peptideids[idx]].sumI_y += (int)intensities[i];
+					}
+				}
+			}
+
+			List<PeptideSpectrumMatch> psms = new List<PeptideSpectrumMatch>();
+			foreach (PeptideMatchInfo match in matches.Values)
+			{
+				if (match.N_b < 2 || match.N_y < 2)
+					continue;
+				double score = SpectrumUtils.CalcHyperScore_by(match.N_b, match.N_y, match.sumI_b, match.sumI_y);
+				if (score < data.MinScore)
+					continue;
+
+				// store this as a psm
+				Peptide[] p = targetdb.GetModifiedPeptidesFromIds(new int[] { (int)match.PeptideId });
+
+				PeptideSpectrumMatch psm = new PeptideSpectrumMatch {
+						RawFile				= base_psm.RawFile,
+						Mz					= precursor.Mz,
+						Charge				= precursor.Charge,
+						MinScan				= precursor.ScanNumber,
+						RetentionTime		= precursor.RetentionTime,
+						Peptide				= p[0],
+						Score				= score,
+						Fragmentation		= precursor.Fragmentation
+					};
+				psms.Add(psm);
+			}
+			if (psms.Count > 0)
+			{
+				psms.Sort((a, b) => -a.Score.CompareTo(b.Score));
+				resulting_psms.Add(psms[0]);
+			}
 		}
 		#endregion
 
