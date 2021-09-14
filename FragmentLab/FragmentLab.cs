@@ -653,6 +653,7 @@ namespace FragmentLab
 			else
 				ms2SpectrumGraph1.SetMirrorSpectrum(null, null, model, settings.Ms2SpectrumSettings);
 
+			precursor.RawFile = psm.RawFile; // we override the rawfilename stored inside the file.
 			ms2FragmentTable1.SetPeptide(psm.Peptide, precursor, spectrum, topxranks, matches, model, psm.Charge, !fragmenttable_event);
 
 			// set the intensities for the different classes of fragments
