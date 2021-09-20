@@ -3,7 +3,7 @@
   <?define FragmentLab_TargetDir=$(var.FragmentLab.TargetDir)?>
 
   <!-- create the product description -->
-  <Product Id="*" Name="FragmentLab" Language="1033" Version="2.6.1.7" Manufacturer="Scheltema Lab" UpgradeCode="a9d07c50-cc6e-43e9-9afe-4c63c2d3f97e">
+  <Product Id="*" Name="FragmentLab" Language="1033" Version="2.6.1.8" Manufacturer="Scheltema Lab" UpgradeCode="a9d07c50-cc6e-43e9-9afe-4c63c2d3f97e">
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
 
     <!-- ensure that all files end up in the MSI -->

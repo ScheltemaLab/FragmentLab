@@ -88,7 +88,7 @@ namespace FragmentLab
 				else if (File.Exists(filename + ".mgf"))
 					return new HeckLibRawFileMgf.HeckLibMgfRawFile(filename + ".mgf");
 				else if (File.Exists(filename + ".tdf"))
-					return new HeckLibRawFileBruker.HeckLibBrukerRawFile(path, new Tolerance(50, Tolerance.ErrorUnit.PPM), 400);
+					return new HeckLibRawFileBruker.HeckLibBrukerRawFile(path, new Tolerance(50, Tolerance.ErrorUnit.PPM), 400, new Tolerance(20, Tolerance.ErrorUnit.PPM));
 				else if (File.Exists(filename + ".mzxml"))
 					return new HeckLibRawFileMzXml.HeckLibMzXmlRawFile(filename + ".mzxml");
 				else if (File.Exists(filename + ".mzml"))
