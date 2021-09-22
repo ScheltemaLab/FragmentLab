@@ -305,6 +305,8 @@ namespace FragmentLab.dialogs
 					Settings = m_pSettings
 				};
 			m_pBackgroundWorker.TriggerBackgroundWorker(m_pDocument.CalculateFrequentFlyers, data);
+			if (data.FreqFyerResult == null)
+				return;
 			FrequentFlyers freqflyers = data.FreqFyerResult;
 
 			data_peaks = freqflyers.InterpretPeaks();

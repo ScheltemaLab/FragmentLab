@@ -724,6 +724,15 @@ namespace FragmentLab
 					currentSpectrum.Font = new System.Drawing.Font(currentSpectrum.Font.FontFamily, 25);
 					model.tolerance = settings.MatchTolerance;
 					currentSpectrum.SetSpectrum(spectrum, topxranks, psm, model, settings.Ms2SpectrumSettings, noiseband: noise);
+					
+					Centroid[] mirror_spectrum;
+					PeptideFragment[] mirror_annotations;
+					m_pDocument.GetSpectralPrediction(psm.Peptide, psm.Charge, out mirror_spectrum, out mirror_annotations);
+					mirror_annotations = SpectrumUtils.MatchFragments(psm.Peptide, psm.Charge, mirror_spectrum, model);
+					if (mirror_spectrum != null)
+						currentSpectrum.SetMirrorSpectrum(mirror_spectrum, mirror_annotations, model, settings.Ms2SpectrumSettings);
+					else
+						currentSpectrum.SetMirrorSpectrum(null, null, model, settings.Ms2SpectrumSettings);
 
 					maker.InsertGDIPLUSDrawing(CreateGraphics(), currentSpectrum.PrintPaint);
 				}

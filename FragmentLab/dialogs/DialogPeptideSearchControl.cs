@@ -346,6 +346,8 @@ namespace FragmentLab.dialogs
 					for (int scannumber = minscannumber; scannumber <= maxscannumber; ++scannumber)
 					{
 						progress.Report((int)(100.0 * nr_psms++ / scancount));
+						if (iscancelled.IsCancellationRequested)
+							break;
 						ScanHeader header = rawfile.GetScanHeader(scannumber);
 						if (header == null || header.ScanType != Spectrum.ScanType.MSn)
 							continue;
@@ -361,6 +363,8 @@ namespace FragmentLab.dialogs
 							continue;
 						Process_analyze_spectrum(data, base_psm, precursor, spectrum, targetdb, fragmentindex, resulting_psms);
 					}
+					if (iscancelled.IsCancellationRequested)
+						break;
 				}
 			}
 			else
@@ -368,6 +372,8 @@ namespace FragmentLab.dialogs
 				foreach (PeptideSpectrumMatch base_psm in base_psms)
 				{
 					progress.Report((int)(100.0 * nr_psms++ / base_psms.Count));
+					if (iscancelled.IsCancellationRequested)
+						break;
 
 					int[] topxranks;
 					PeptideFragment.FragmentModel model;
@@ -378,7 +384,7 @@ namespace FragmentLab.dialogs
 					Process_analyze_spectrum(data, base_psm, precursor, spectrum, targetdb, fragmentindex, resulting_psms);
 				}
 			}
-			m_lResult = resulting_psms;
+			m_lResult = iscancelled.IsCancellationRequested ? null : resulting_psms;
 
 			// destroy the temporary database
 			targetdb.Dispose();

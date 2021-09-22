@@ -463,6 +463,9 @@ namespace FragmentLab.dialogs
 			Dictionary<string, List<PeptideSpectrumMatch>> accession_to_psm = new Dictionary<string, List<PeptideSpectrumMatch>>();
 			foreach (PeptideSpectrumMatch psm in m_lPsms)
 			{
+				if (iscancelled.IsCancellationRequested)
+					return;
+				
 				if (psm.Peptide.ProteinAccessions == null) continue;
 				foreach (string accession in psm.Peptide.ProteinAccessions)
 				{
@@ -480,7 +483,8 @@ namespace FragmentLab.dialogs
 
 			// create the protein data
 			data.protein_mapping = new Dictionary<string, ProteinData>();
-			FastaParser.Parse(m_pSettings.FastaFile, FastaParser.Format.FASTA, null, delegate (string header, string sequence, Modification nterm, Modification cterm, Modification[] modifications, double local_progress) {
+			FastaParser.Parse(m_pSettings.FastaFile, FastaParser.Format.FASTA, null, delegate (string header, string sequence, Modification nterm, Modification cterm, Modification[] modifications, double local_progress, out bool cancel) {
+					cancel = iscancelled.IsCancellationRequested;
 					progress.Report((int)Math.Max(100*local_progress, 100));
 
 					string accession = FastaUtils<Dummy>.RetrieveAccession(header);
@@ -491,9 +495,17 @@ namespace FragmentLab.dialogs
 						return;
 					data.protein_mapping.Add(accession, new ProteinData { Accession = accession, GeneNames = new HashSet<string>(), Description = description, Sequence = sequence, Psms = accession_to_psm[accession], SequenceCoverage = -1 });
 				});
+			if (iscancelled.IsCancellationRequested)
+			{
+				data.protein_mapping = new Dictionary<string, ProteinData>();
+				return;
+			}
 
 			foreach (ProteinData p in data.protein_mapping.Values)
 			{
+				if (iscancelled.IsCancellationRequested)
+					break;
+
 				// calculate the protein position where this is not known
 				foreach (PeptideSpectrumMatch psm in p.Psms)
 				{
@@ -517,6 +529,11 @@ namespace FragmentLab.dialogs
 					if (covered[i] > 0) nridentified++;
 
 				p.SequenceCoverage = Math.Round(100 * nridentified / (double)p.Sequence.Length, 2);
+			}
+			if (iscancelled.IsCancellationRequested)
+			{
+				data.protein_mapping = new Dictionary<string, ProteinData>();
+				return;
 			}
 		}
 

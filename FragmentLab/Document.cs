@@ -297,8 +297,16 @@ namespace FragmentLab
 				GenericFileFormat.Format format = GenericFileFormat.Format.UNKNOWN;
 
 				Dictionary<string, Modification> modifications = m_pSettingsDatabase.GetModifications();
-				CsvFileReader<GenericFileFormat>.Parse(data.Filename, delegate (GenericFileFormat record, double preogress) {
+				CsvFileReader<GenericFileFormat>.Parse(data.Filename, delegate (GenericFileFormat record, double preogress, out bool cancel) {
 						progress.Report((int) Math.Floor(100 * preogress));
+						cancel = false;
+						if (iscancelled.IsCancellationRequested)
+						{
+							cancel = true;
+							m_lPsms.Clear();
+							m_nNumberPsms = 0;
+							return;
+						}
 					
 						Peptide peptide = GenericFileFormat.CreatePeptide(record, modifications, format, out format);
 						if (peptide.Length != peptide.Modifications.Length)
@@ -480,6 +488,8 @@ namespace FragmentLab
 				{
 					double current_progress = sn_last == sn_first ? 100 : Math.Floor(100 * scannumber / (double)(sn_last - sn_first));
 					progress.Report((int)current_progress);
+					if (iscancelled.IsCancellationRequested)
+						break;
 
 					ScanHeader header = rawfile.GetScanHeader(scannumber);
 					PrecursorInfo precursor = rawfile.GetPrecursorInfo(scannumber);
@@ -504,6 +514,12 @@ namespace FragmentLab
 					m_lPsms[psm.RawFile].Add(psm);
 					m_nNumberPsms++;
 				}
+			}
+
+			if (iscancelled.IsCancellationRequested)
+			{
+				m_lPsms.Clear();
+				m_nNumberPsms = 0;
 			}
 		}
 
@@ -1251,7 +1267,7 @@ namespace FragmentLab
 				progress.Report((int)(100.0 * numberpsms / m_nNumberPsms));
 			}
 
-			data.FreqFyerResult = freqflyers;
+			data.FreqFyerResult = iscancelled.IsCancellationRequested ? null : freqflyers;
 		}
 		#endregion
 
