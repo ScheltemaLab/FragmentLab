@@ -24,7 +24,7 @@ release:
   stage: deploy
   tags: [windows,csharp]
   script:
-  - echo "release"
+  - $MSBUILD_FULL_PATH source/installer
   artifacts:
     untracked: true
     when: always
