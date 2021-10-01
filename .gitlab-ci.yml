@@ -23,6 +23,12 @@ release:
   tags: [windows,csharp]
   script:
   - $MSBUILD_FULL_PATH source/installer
+  - git remote set-url origin git@bms-developer.science.uu.nl:csharp/shotgun/fragmentlab.git
+  - git tag -a "bla" -m "bla"
+  - git push origin bla
+  - $postParams = @{name='New release';tag_name='bla';description='release me'}
+  - $headers = @{"PRIVATE-TOKEN"=$ACCESS_TOKEN};
+  - Invoke-WebRequest -Uri "https://bms-developer.science.uu.nl/api/v4/projects/99/releases" -Method POST -Body $postParams -Headers $headers
   artifacts:
     untracked: true
     when: always
