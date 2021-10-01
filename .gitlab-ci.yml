@@ -22,7 +22,7 @@ release:
   stage: deploy
   tags: [windows,csharp]
   script:
-  - $MSBUILD_FULL_PATH source/installer
+  - '& $MSBUILD_FULL_PATH ".\source\installer"'
   - git remote set-url origin git@bms-developer.science.uu.nl:csharp/shotgun/fragmentlab.git
   - git tag -a "bla" -m "bla"
   - git push origin bla
