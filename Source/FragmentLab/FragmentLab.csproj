@@ -23,7 +23,6 @@
 		<Copyright>Copyright © Scheltema Lab</Copyright>
 		<PlatformTarget>x64</PlatformTarget>
 		<DebugType>full</DebugType>
-		<OutputPath>bin\$(Configuration)\</OutputPath>
 		<GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
 	</PropertyGroup>
 
@@ -44,12 +43,7 @@
 		<AssemblyVersion>2.6.1.11</AssemblyVersion>
 		<Authors>Richard Scheltema, Andris Jankevics, Henk van der Toorn, Bastiaan de Graaf, Sem Tamara</Authors>
 		<FileVersion>2.6.1.11</FileVersion>
-	</PropertyGroup>
-	<PropertyGroup>
 		<OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
-		<DebugType>full</DebugType>
-		<CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-		<Prefer32Bit>true</Prefer32Bit>
 	</PropertyGroup>
 
 	<ItemGroup>
