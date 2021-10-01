@@ -1,0 +1,30 @@
+include:
+  - template: 'Workflows/MergeRequest-Pipelines.gitlab-ci.yml'
+
+workflow:
+  rules:
+    - if: $GITLAB_USER_LOGIN != "taggart"
+
+stages:
+  - build
+  - deploy
+
+build:
+  stage: build
+  tags: [windows,csharp]
+  script:
+  - '& CiScripts\Scripts\build.ps1'
+  artifacts:
+    untracked: true
+    when: always
+
+release:
+  only:
+  - manual
+  stage: deploy
+  tags: [windows,csharp]
+  script:
+  - echo "release"
+  artifacts:
+    untracked: true
+    when: always
