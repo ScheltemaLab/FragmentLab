@@ -19,8 +19,6 @@ build:
     when: always
 
 release:
-  only:
-  - manual
   stage: deploy
   tags: [windows,csharp]
   script:
