@@ -23,7 +23,7 @@ release:
   tags: [windows,csharp]
   script:
   - '& $MSBUILD_FULL_PATH ".\source\installer" -t:restore -p:RestorePackagesConfig=true /p:RestoreSources=$NUGET_CI_TARGET'
-  - Invoke-RestMethod -Headers @{ "JOB-TOKEN"="$CI_JOB_TOKEN" } -InFile source/fragmentlab/fragmentlab.csproj -uri "https://bms-developer.science.uu.nl/api/v4/projects/${CI_PROJECT_ID}/packages/generic/my_package/0.0.1/file.txt" -Method put
+  - Invoke-RestMethod -Headers @{ "JOB-TOKEN"="$CI_JOB_TOKEN", "Content-Type"="multipart/form-data" } -InFile source/fragmentlab/fragmentlab.csproj -uri "https://bms-developer.science.uu.nl/api/v4/projects/99/packages/generic/my_package/0.0.1/test.txt" -Method put
   - git remote set-url origin git@bms-developer.science.uu.nl:csharp/shotgun/fragmentlab.git
   - git tag -a "bla" -m "bla"
   - git push origin bla
