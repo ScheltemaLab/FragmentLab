@@ -6,6 +6,7 @@ workflow:
     - if: $GITLAB_USER_LOGIN == "taggart"
       when: never
 
+
 stages:
   - build
   - deploy
