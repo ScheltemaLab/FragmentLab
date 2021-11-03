@@ -13,7 +13,6 @@
 		<UpdateRequired>false</UpdateRequired>
 		<MapFileExtensions>true</MapFileExtensions>
 		<ApplicationRevision>0</ApplicationRevision>
-		<ApplicationVersion>1.0.0.%2a</ApplicationVersion>
 		<IsWebBootstrapper>false</IsWebBootstrapper>
 		<UseApplicationTrust>false</UseApplicationTrust>
 		<BootstrapperEnabled>true</BootstrapperEnabled>
@@ -40,6 +39,7 @@
 		</Description>
 		<Version>2.6.1.11</Version>
 		<PackageProjectUrl>https://scheltemalab.com</PackageProjectUrl>
+		<ApplicationVersion>2.6.1.11</ApplicationVersion>
 		<AssemblyVersion>2.6.1.11</AssemblyVersion>
 		<Authors>Richard Scheltema, Andris Jankevics, Henk van der Toorn, Bastiaan de Graaf, Sem Tamara</Authors>
 		<FileVersion>2.6.1.11</FileVersion>

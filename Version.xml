@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="3.5"
+         DefaultTargets="Build"
+         xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <VersionMajor>2</VersionMajor>
+        <VersionMinor>6</VersionMinor>
+        <VersionBuild>1</VersionBuild>
+        <VersionRevision>11</VersionRevision>
+    </PropertyGroup>
+</Project>
