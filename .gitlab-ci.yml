@@ -1,6 +1,8 @@
 include:
   - template: 'Workflows/MergeRequest-Pipelines.gitlab-ci.yml'
-
+    rules:
+      - if: $GITLAB_USER_LOGIN != "taggart"
+      
 workflow:
   rules:
     - if: $GITLAB_USER_LOGIN != "taggart"
