@@ -22,12 +22,13 @@ release:
   stage: deploy
   tags: [windows,csharp]
   script:
+  - $VERSION = (get-item -path .\source\fragmentlab\bin\anycpu\debug\net472\FragmentLab.exe).VersionInfo.ProductVersion
   - '& $MSBUILD_FULL_PATH ".\source\installer" -t:restore -p:RestorePackagesConfig=true /p:RestoreSources=$NUGET_CI_TARGET'
-  - Invoke-RestMethod -Headers @{ "JOB-TOKEN"="$CI_JOB_TOKEN"; "Content-Type"="multipart/form-data" } -InFile source/fragmentlab/fragmentlab.csproj -uri "https://bms-developer.science.uu.nl/api/v4/projects/99/packages/generic/my_package/0.0.1/test.txt" -Method put
+  - Invoke-RestMethod -Headers @{ "JOB-TOKEN"="$CI_JOB_TOKEN"; "Content-Type"="multipart/form-data" } -InFile source/installer/bin/debug/installer.msi -uri "https://bms-developer.science.uu.nl/api/v4/projects/99/packages/generic/FragmentLab/$VERSION/installer.msi" -Method put
   - git remote set-url origin git@bms-developer.science.uu.nl:csharp/shotgun/fragmentlab.git
-  - git tag -a "bla" -m "bla"
+  - git tag -a "$VERSION" -m $CI_RELEASE_MESSAGE
   - git push origin bla
-  - $postParams = @{name='New release';tag_name='bla';description='release me'}
+  - $postParams = @{name='New release';tag_name='$VERSION';description='$CI_RELEASE_MESSAGE'}
   - $headers = @{"PRIVATE-TOKEN"=$ACCESS_TOKEN};
   - Invoke-WebRequest -Uri "https://bms-developer.science.uu.nl/api/v4/projects/99/releases" -Method POST -Body $postParams -Headers $headers -UseBasicParsing
   artifacts:
