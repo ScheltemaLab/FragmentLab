@@ -24,7 +24,7 @@ release:
   tags: [windows,csharp]
   script:
   - $VERSION = (get-item -path .\source\fragmentlab\bin\anycpu\debug\net472\FragmentLab.exe).VersionInfo.ProductVersion
-  - '& $MSBUILD_FULL_PATH ".\source\installer\installer.wixproj" -p:configuration=release -t:restore -p:RestorePackagesConfig=true /p:RestoreSources=$NUGET_CI_TARGET'
+  - '& $MSBUILD_FULL_PATH -p:configuration=release -t:restore -p:RestorePackagesConfig=true /p:RestoreSources=$NUGET_CI_TARGET'
   - Invoke-RestMethod -Headers @{ "JOB-TOKEN"="$CI_JOB_TOKEN"; "Content-Type"="multipart/form-data" } -InFile source/installer/bin/debug/installer.msi -uri "https://bms-developer.science.uu.nl/api/v4/projects/99/packages/generic/FragmentLab/$VERSION/installer.msi" -Method put
   - git remote set-url origin git@bms-developer.science.uu.nl:csharp/shotgun/fragmentlab.git
   - git tag -a "$VERSION" -m $CI_RELEASE_MESSAGE
