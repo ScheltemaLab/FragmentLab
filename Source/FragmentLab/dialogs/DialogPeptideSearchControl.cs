@@ -255,7 +255,9 @@ namespace FragmentLab.dialogs
 					Path.Combine(dbpath, "peptide.masses"),
 					Path.Combine(dbpath, "peptide.modpeps"),
 					Path.Combine(dbpath, "peptide.modificationdescriptions"),
-					Path.Combine(dbpath, "peptide.proteins")
+					Path.Combine(dbpath, "peptide.proteins"),
+					Path.Combine(dbpath, "peptide.proteininfo_allseqpos"),
+					Path.Combine(dbpath, "peptide.proteininfo_infos")
 				);
 			fragmentindex = new FragmentIndex(Path.Combine(dbpath, "peptide.fragmentindex"));
 		}
@@ -285,7 +287,9 @@ namespace FragmentLab.dialogs
 					Path.Combine(dbpath, "protein.masses"),
 					Path.Combine(dbpath, "protein.modpeps"),
 					Path.Combine(dbpath, "protein.modificationdescriptions"),
-					Path.Combine(dbpath, "protein.proteins")
+					Path.Combine(dbpath, "protein.proteins"),
+					Path.Combine(dbpath, "peptide.proteininfo_allseqpos"),
+					Path.Combine(dbpath, "peptide.proteininfo_infos")
 				);
 			fragmentindex = new FragmentIndex(Path.Combine(dbpath, "protein.fragmentindex"));
 		}
