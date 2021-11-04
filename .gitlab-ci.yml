@@ -29,7 +29,10 @@ release_job:
   - Invoke-RestMethod -Headers @{ "JOB-TOKEN"="$CI_JOB_TOKEN"; "Content-Type"="multipart/form-data" } -InFile source/installer/bin/release/installer.msi -uri "https://bms-developer.science.uu.nl/api/v4/projects/99/packages/generic/FragmentLab/$VERSION/installer.msi" -Method put
   - git remote set-url origin git@bms-developer.science.uu.nl:csharp/shotgun/fragmentlab.git
   - git tag -a "$VERSION" -m $VERSION
-  - git push origin bla
+  - git push origin $VERSION
+  - mkdir release-cli
+  - curl.exe -L https://release-cli-downloads.s3.amazonaws.com/latest/release-cli-windows-amd64.exe --output release-cli\release-cli.exe
+  - cd release-cli\
  # - $postParams = @{name='New release';tag_name='$VERSION';description='$VERSION'}
  # - $headers = @{"PRIVATE-TOKEN"=$ACCESS_TOKEN};
  # - Invoke-WebRequest -Uri "https://bms-developer.science.uu.nl/api/v4/projects/99/releases" -Method POST -Body $postParams -Headers $headers -UseBasicParsing
