@@ -31,7 +31,7 @@ release_job:
   - git tag -a "$VERSION" -m $VERSION
   - git push origin $VERSION
   - curl.exe -L https://release-cli-downloads.s3.amazonaws.com/latest/release-cli-windows-amd64.exe --output release-cli.exe
-  - $postParams = @{name='$VERSION';tag_name='$VERSION';description='$VERSION';ref='$CI_COMMIT_SHA'}
+  - $postParams = @{name='${VERSION}';tag_name='${VERSION}';description='${VERSION}';ref='${CI_COMMIT_SHA}'}
   - $headers = @{"PRIVATE-TOKEN"=$ACCESS_TOKEN};
   - Invoke-WebRequest -Uri "https://bms-developer.science.uu.nl/api/v4/projects/99/releases" -Method POST -Body $postParams -Headers $headers -UseBasicParsing
   #release:
