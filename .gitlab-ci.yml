@@ -36,7 +36,7 @@ release_job:
   release:
     name: 'Release $VERSION'
     description: 'Created using the release-cli $VERSION'  
-    tag_name: '$TAG'                                       
+    tag_name: '$VERSION'                                       
     ref: '$CI_COMMIT_SHA'            
     assets:
       links:
