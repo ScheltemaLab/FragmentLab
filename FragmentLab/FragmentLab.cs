@@ -28,13 +28,15 @@ using System.Collections.Generic;
 // HeckLib
 using HeckLib;
 using HeckLib.masspec;
-using HeckLib.chemistry;
 using HeckLib.backgroundworker;
 using HeckLib.objectlistview;
 
 using HeckLib.io;
 using HeckLib.io.database;
 using HeckLib.io.fileformats;
+
+using HeckLib.chemistry;
+using HeckLib.chemistry.crosslinking;
 
 using hecklib.graphics;
 using hecklib.graphics.editors;
@@ -231,7 +233,7 @@ namespace FragmentLab
 						HashCode		= "",
 						LastAccessed	= DateTime.Now
 					};
-				m_pSettingsDb = new HeckLib.io.database.HeckLibSettingsDatabase(dbfile, Modification.Parse(), dbinfo);
+				m_pSettingsDb = new HeckLib.io.database.HeckLibSettingsDatabase(dbfile, Modification.Parse(), LabileXlinker.Parse(), dbinfo);
 				m_pSettingsDb.Dispose();
 			}
 			m_pSettingsDb = new HeckLib.io.database.HeckLibSettingsDatabase(dbfile);
