@@ -19,7 +19,7 @@ build:
     untracked: true
     when: always
 
-release:
+release_job:
   stage: deploy
   tags: [windows,csharp]
   script:
@@ -30,9 +30,18 @@ release:
   - git remote set-url origin git@bms-developer.science.uu.nl:csharp/shotgun/fragmentlab.git
   - git tag -a "$VERSION" -m $VERSION
   - git push origin bla
-  - $postParams = @{name='New release';tag_name='$VERSION';description='$VERSION'}
-  - $headers = @{"PRIVATE-TOKEN"=$ACCESS_TOKEN};
-  - Invoke-WebRequest -Uri "https://bms-developer.science.uu.nl/api/v4/projects/99/releases" -Method POST -Body $postParams -Headers $headers -UseBasicParsing
+ # - $postParams = @{name='New release';tag_name='$VERSION';description='$VERSION'}
+ # - $headers = @{"PRIVATE-TOKEN"=$ACCESS_TOKEN};
+ # - Invoke-WebRequest -Uri "https://bms-developer.science.uu.nl/api/v4/projects/99/releases" -Method POST -Body $postParams -Headers $headers -UseBasicParsing
+  release:
+    name: 'Release $VERSION'
+    description: 'Created using the release-cli $VERSION'  
+    tag_name: '$TAG'                                       
+    ref: '$CI_COMMIT_SHA'            
+    assets:
+      links:
+        - name: 'installer'
+          url: 'https://bms-developer.science.uu.nl/api/v4/projects/99/packages/generic/FragmentLab/$VERSION/installer.msi'
   artifacts:
     untracked: true
     when: always
