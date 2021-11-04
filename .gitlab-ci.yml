@@ -23,7 +23,9 @@ release_job:
   stage: deploy
   tags: [windows,csharp]
   script:
+  - echo '$CI_COMMIT_SHA'
   - $VERSION = (get-item -path .\source\fragmentlab\bin\anycpu\debug\net472\FragmentLab.exe).VersionInfo.ProductVersion
+  - echo $VERSION
   - '& $MSBUILD_FULL_PATH -p:configuration=release -t:restore -p:RestorePackagesConfig=true /p:RestoreSources=$NUGET_SOURCE'
   - '& $MSBUILD_FULL_PATH -p:configuration=release'
   - Invoke-RestMethod -Headers @{ "JOB-TOKEN"="$CI_JOB_TOKEN"; "Content-Type"="multipart/form-data" } -InFile source/installer/bin/release/installer.msi -uri "https://bms-developer.science.uu.nl/api/v4/projects/99/packages/generic/FragmentLab/$VERSION/installer.msi" -Method put
@@ -31,7 +33,7 @@ release_job:
   - git tag -a "$VERSION" -m $VERSION
   - git push origin $VERSION
   - curl.exe -L https://release-cli-downloads.s3.amazonaws.com/latest/release-cli-windows-amd64.exe --output release-cli.exe
-  - $postParams = @{name='${VERSION}';tag_name='${VERSION}';description='${VERSION}';ref='${CI_COMMIT_SHA}'}
+  - $postParams = @{name=$VERSION;tag_name=$VERSION;description=$VERSION}
   - $headers = @{"PRIVATE-TOKEN"=$ACCESS_TOKEN};
   - Invoke-WebRequest -Uri "https://bms-developer.science.uu.nl/api/v4/projects/99/releases" -Method POST -Body $postParams -Headers $headers -UseBasicParsing
   #release:
