@@ -31,18 +31,18 @@ release_job:
   - git tag -a "$VERSION" -m $VERSION
   - git push origin $VERSION
   - curl.exe -L https://release-cli-downloads.s3.amazonaws.com/latest/release-cli-windows-amd64.exe --output release-cli.exe
- # - $postParams = @{name='New release';tag_name='$VERSION';description='$VERSION'}
- # - $headers = @{"PRIVATE-TOKEN"=$ACCESS_TOKEN};
- # - Invoke-WebRequest -Uri "https://bms-developer.science.uu.nl/api/v4/projects/99/releases" -Method POST -Body $postParams -Headers $headers -UseBasicParsing
-  release:
-    name: 'Release $VERSION'
-    description: 'Created using the release-cli $VERSION'  
-    tag_name: '$VERSION'                                       
-    ref: '$CI_COMMIT_SHA'            
-    assets:
-      links:
-        - name: 'installer'
-          url: 'https://bms-developer.science.uu.nl/api/v4/projects/99/packages/generic/FragmentLab/$VERSION/installer.msi'
+  - $postParams = @{name='New release';tag_name='$VERSION';description='$VERSION'}
+  - $headers = @{"PRIVATE-TOKEN"=$ACCESS_TOKEN};
+  - Invoke-WebRequest -Uri "https://bms-developer.science.uu.nl/api/v4/projects/99/releases" -Method POST -Body $postParams -Headers $headers -UseBasicParsing
+  #release:
+  #  name: 'Release $VERSION'
+  #  description: 'Created using the release-cli $VERSION'  
+  #  tag_name: '$VERSION'                                       
+  #  ref: '$CI_COMMIT_SHA'            
+  #  assets:
+  #    links:
+  #      - name: 'installer'
+  #        url: 'https://bms-developer.science.uu.nl/api/v4/projects/99/packages/generic/FragmentLab/$VERSION/installer.msi'
   artifacts:
     untracked: true
     when: always
