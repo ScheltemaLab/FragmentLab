@@ -6,6 +6,9 @@ workflow:
     - if: $CI_COMMIT_TAG
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
+variables:
+    GIT_SSL_NO_VERIFY: "true"
+
 stages:
   - build
   - deploy
@@ -22,6 +25,7 @@ build:
 release_job:
   stage: deploy
   tags: [windows,csharp]
+  var
   script:
   - echo '$CI_COMMIT_SHA'
   - $VERSION = (get-item -path .\source\fragmentlab\bin\anycpu\debug\net472\FragmentLab.exe).VersionInfo.ProductVersion
