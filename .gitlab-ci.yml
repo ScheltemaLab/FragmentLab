@@ -42,14 +42,14 @@ release_job:
   - release-cli -h
   - $env:Path += ";C:\ProgramData\chocolatey\bin"
   - $env:Path += ";C:\Program Files\OpenSSL-Win64\bin"
-  - $cert = echo QUIT | openssl s_client -connect bms-developer.science.uu.nl:443 | sed -e '/-----BEGIN/,/-----END/!d' | tee "C:\Program Files\Common Files\SSL\bms-developer.science.uu.nl.crt"
+  - $cert = echo QUIT | openssl s_client -connect bms-developer.science.uu.nl:443 | sed -e '/-----BEGIN/,/-----END/!d' | tee "C:\Program Files\Common Files\SSL\bms-developer.science.uu.nl.crt" | | out-null
   #- $postParams = @{name=$VERSION;tag_name=$VERSION;description=$VERSION;assets= { links= [{ name='installer'; url= 'https://bms-developer.science.uu.nl/api/v4/projects/99/packages/generic/FragmentLab/$VERSION/installer.msi'}] } }}
   #- $headers = @{"PRIVATE-TOKEN"=$ACCESS_TOKEN}
   #- Invoke-WebRequest -Uri "https://bms-developer.science.uu.nl/api/v4/projects/99/releases" -Method POST -Body $postParams -Headers $headers -UseBasicParsing
   - $env:asset = "{`"name`":`"Installer`",`"url`":`"https://bms-developer.science.uu.nl/api/v4/projects/99/packages/generic/FragmentLab/$VERSION/installer.msi`"}"
   - $env:assetjson = $env:asset | ConvertTo-Json
   #- '& release-cli.exe create --name $VERSION --tag-name $VERSION --description $VERSION --assets-link=$env:assetjson'
-  - release-cli --additional-ca-cert-bundle=="$cert" create --name "Release $VERSION" --description "Created using the release-cli $VERSION" --tag-name "$VERSION" --assets-link=$env:assetjson
+  - release-cli create --name "Release $VERSION" --description "Created using the release-cli $VERSION" --tag-name "$VERSION" --assets-link=$env:assetjson
   #release:
   #  name: 'Release $VERSION'
   #  description: 'Created using the release-cli $VERSION'  
