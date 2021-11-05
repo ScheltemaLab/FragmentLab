@@ -40,6 +40,7 @@ release_job:
   - $env:Path
   - release-cli\release-cli.exe -h
   - release-cli -h
+  - $env:Path += ";C:\Program Files\OpenSSL-Win64\bin"
   - $cert = echo QUIT | openssl s_client -connect bms-developer.science.uu.nl:443 | sed -e '/-----BEGIN/,/-----END/!d' | tee "C:\Program Files\Common Files\SSL\bms-developer.science.uu.nl.crt"
   #- $postParams = @{name=$VERSION;tag_name=$VERSION;description=$VERSION;assets= { links= [{ name='installer'; url= 'https://bms-developer.science.uu.nl/api/v4/projects/99/packages/generic/FragmentLab/$VERSION/installer.msi'}] } }}
   #- $headers = @{"PRIVATE-TOKEN"=$ACCESS_TOKEN}
