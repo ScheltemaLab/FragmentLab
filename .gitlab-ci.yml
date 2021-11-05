@@ -32,11 +32,12 @@ release_job:
   - git remote set-url origin git@bms-developer.science.uu.nl:csharp/shotgun/fragmentlab.git
   - git tag -a "$VERSION" -m $VERSION
   - git push origin $VERSION
-  - curl.exe -L https://release-cli-downloads.s3.amazonaws.com/latest/release-cli-windows-amd64.exe --output release-cli.exe
-  - dir
-  - set cliDir=%cd%
+  - curl.exe -L https://release-cli-downloads.s3.amazonaws.com/latest/release-cli-windows-amd64.exe --output release-cli\release-cli.exe
+  - dir release-cli\
+  - set cliDir=%cd%\release-cli
   - '$env:Path += ";%cliDir%"'
-  - release-cli.exe -h
+  - $env:Path
+  - release-cli\release-cli.exe -h
   - release-cli -h
   #- $postParams = @{name=$VERSION;tag_name=$VERSION;description=$VERSION;assets= { links= [{ name='installer'; url= 'https://bms-developer.science.uu.nl/api/v4/projects/99/packages/generic/FragmentLab/$VERSION/installer.msi'}] } }}
   #- $headers = @{"PRIVATE-TOKEN"=$ACCESS_TOKEN}
