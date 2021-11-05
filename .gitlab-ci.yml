@@ -14,7 +14,7 @@ build:
   stage: build
   tags: [windows,csharp]
   script:
-  - echo | /opt/gitlab/embedded/bin/openssl s_client -connect "$CI_SERVER_HOST:$CI_SERVER_PORT"
+  - echo | /opt/gitlab/embedded/bin/openssl s_client -connect '${CI_SERVER_HOST}:${CI_SERVER_PORT}'
   - '& CiScripts\Scripts\build.ps1'
   artifacts:
     untracked: true
