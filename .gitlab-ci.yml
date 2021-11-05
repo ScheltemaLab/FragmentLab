@@ -6,6 +6,9 @@ workflow:
     - if: $CI_COMMIT_TAG
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
+variables:
+    SSL_CERT_DIR: "C:\Windows\system32\config\systemprofile\.ssh"
+
 stages:
   - build
   - deploy
@@ -23,41 +26,20 @@ release_job:
   stage: deploy
   tags: [windows,csharp]
   script:
-  - echo '$CI_COMMIT_SHA'
   - $VERSION = (get-item -path .\source\fragmentlab\bin\anycpu\debug\net472\FragmentLab.exe).VersionInfo.ProductVersion
-  - echo $VERSION
-  #- '& $MSBUILD_FULL_PATH -p:configuration=release -t:restore -p:RestorePackagesConfig=true /p:RestoreSources=$NUGET_SOURCE'
-  #- '& $MSBUILD_FULL_PATH -p:configuration=release'
-  #- Invoke-RestMethod -Headers @{ "JOB-TOKEN"="$CI_JOB_TOKEN"; "Content-Type"="multipart/form-data" } -InFile source/installer/bin/release/installer.msi -uri "https://bms-developer.science.uu.nl/api/v4/projects/99/packages/generic/FragmentLab/$VERSION/installer.msi" -Method put
+  - '& $MSBUILD_FULL_PATH -p:configuration=release -t:restore -p:RestorePackagesConfig=true /p:RestoreSources=$NUGET_SOURCE'
+  - '& $MSBUILD_FULL_PATH -p:configuration=release'
+  - Invoke-RestMethod -Headers @{ "JOB-TOKEN"="$CI_JOB_TOKEN"; "Content-Type"="multipart/form-data" } -InFile source/installer/bin/release/installer.msi -uri "https://bms-developer.science.uu.nl/api/v4/projects/99/packages/generic/FragmentLab/$VERSION/installer.msi" -Method put
   - git remote set-url origin git@bms-developer.science.uu.nl:csharp/shotgun/fragmentlab.git
   - git tag -a "$VERSION" -m $VERSION
   - git push origin $VERSION
   - mkdir release-cli
   - curl.exe -L https://release-cli-downloads.s3.amazonaws.com/latest/release-cli-windows-amd64.exe --output release-cli\release-cli.exe
-  - dir release-cli\
   - $cliDir = (Get-Item .).FullName+"\release-cli\"
   - '$env:Path += ";$cliDir"'
-  - $env:Path
-  - release-cli\release-cli.exe -h
-  - release-cli -h
-  - $env:Path += ";C:\ProgramData\chocolatey\bin"
-  - $env:Path += ";C:\Program Files\OpenSSL-Win64\bin"
-  - $cert = echo QUIT | openssl s_client -connect bms-developer.science.uu.nl:443 | sed -e '/-----BEGIN/,/-----END/!d' | tee "C:\Program Files\Common Files\SSL\bms-developer.science.uu.nl.crt" | out-null
-  #- $postParams = @{name=$VERSION;tag_name=$VERSION;description=$VERSION;assets= { links= [{ name='installer'; url= 'https://bms-developer.science.uu.nl/api/v4/projects/99/packages/generic/FragmentLab/$VERSION/installer.msi'}] } }}
-  #- $headers = @{"PRIVATE-TOKEN"=$ACCESS_TOKEN}
-  #- Invoke-WebRequest -Uri "https://bms-developer.science.uu.nl/api/v4/projects/99/releases" -Method POST -Body $postParams -Headers $headers -UseBasicParsing
   - $env:asset = "{`"name`":`"Installer`",`"url`":`"https://bms-developer.science.uu.nl/api/v4/projects/99/packages/generic/FragmentLab/$VERSION/installer.msi`"}"
   - $env:assetjson = $env:asset | ConvertTo-Json
-  #- '& release-cli.exe create --name $VERSION --tag-name $VERSION --description $VERSION --assets-link=$env:assetjson'
-  - release-cli create --name "Release $VERSION" --description "Created using the release-cli $VERSION" --tag-name "$VERSION" --assets-link=$env:assetjson
-  #release:
-  #  name: 'Release $VERSION'
-  #  description: 'Created using the release-cli $VERSION'  
-  #  tag_name: '$VERSION'         
-  #  assets:
-  #    links:
-  #      - name: 'installer'
-  #        url: 'https://bms-developer.science.uu.nl/api/v4/projects/99/packages/generic/FragmentLab/$VERSION/installer.msi'
+  - release-cli --insecure-https=true create --name "Release $VERSION" --description "Created using the release-cli $VERSION" --tag-name "$VERSION" --assets-link=$env:assetjson
   artifacts:
     untracked: true
     when: always
