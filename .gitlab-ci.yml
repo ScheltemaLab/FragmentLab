@@ -32,7 +32,6 @@ release_job:
   - git remote set-url origin git@bms-developer.science.uu.nl:csharp/shotgun/fragmentlab.git
   - git tag -a "$VERSION" -m $VERSION
   - git push origin $VERSION
-  - choco install -r --no-progress curl -y
   - curl.exe -L https://release-cli-downloads.s3.amazonaws.com/latest/release-cli-windows-amd64.exe --output release-cli.exe
   - dir
   - set cliDir=%cd%
