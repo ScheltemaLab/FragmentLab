@@ -46,7 +46,7 @@ release_job:
   - $env:asset = "{`"name`":`"Installer`",`"url`":`"https://bms-developer.science.uu.nl/api/v4/projects/99/packages/generic/FragmentLab/$VERSION/installer.msi`"}"
   - $env:assetjson = $env:asset | ConvertTo-Json
   #- '& release-cli.exe create --name $VERSION --tag-name $VERSION --description $VERSION --assets-link=$env:assetjson'
-  - release-cli --insecure-https=true  create --name "Release $VERSION" --description "Created using the release-cli $VERSION" --tag-name "$VERSION" --assets-link=$env:assetjson
+  - release-cli --additional-ca-cert-bundle="C:\\Windows\\system32\\config\\systemprofile\\.ssh\\id_ed25519.pub"  create --name "Release $VERSION" --description "Created using the release-cli $VERSION" --tag-name "$VERSION" --assets-link=$env:assetjson
   #release:
   #  name: 'Release $VERSION'
   #  description: 'Created using the release-cli $VERSION'  
