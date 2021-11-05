@@ -26,12 +26,12 @@ release_job:
   - echo '$CI_COMMIT_SHA'
   - $VERSION = (get-item -path .\source\fragmentlab\bin\anycpu\debug\net472\FragmentLab.exe).VersionInfo.ProductVersion
   - echo $VERSION
-  - #'& $MSBUILD_FULL_PATH -p:configuration=release -t:restore -p:RestorePackagesConfig=true /p:RestoreSources=$NUGET_SOURCE'
-  - #'& $MSBUILD_FULL_PATH -p:configuration=release'
-  - #Invoke-RestMethod -Headers @{ "JOB-TOKEN"="$CI_JOB_TOKEN"; "Content-Type"="multipart/form-data" } -InFile source/installer/bin/release/installer.msi -uri "https://bms-developer.science.uu.nl/api/v4/projects/99/packages/generic/FragmentLab/$VERSION/installer.msi" -Method put
-  - #git remote set-url origin git@bms-developer.science.uu.nl:csharp/shotgun/fragmentlab.git
-  - #git tag -a "$VERSION" -m $VERSION
-  - #git push origin $VERSION
+  #- '& $MSBUILD_FULL_PATH -p:configuration=release -t:restore -p:RestorePackagesConfig=true /p:RestoreSources=$NUGET_SOURCE'
+  #- '& $MSBUILD_FULL_PATH -p:configuration=release'
+  #- Invoke-RestMethod -Headers @{ "JOB-TOKEN"="$CI_JOB_TOKEN"; "Content-Type"="multipart/form-data" } -InFile source/installer/bin/release/installer.msi -uri "https://bms-developer.science.uu.nl/api/v4/projects/99/packages/generic/FragmentLab/$VERSION/installer.msi" -Method put
+  #- git remote set-url origin git@bms-developer.science.uu.nl:csharp/shotgun/fragmentlab.git
+  #- git tag -a "$VERSION" -m $VERSION
+  #- git push origin $VERSION
   - mkdir release-cli
   - curl.exe -L https://release-cli-downloads.s3.amazonaws.com/latest/release-cli-windows-amd64.exe --output release-cli\release-cli.exe
   - dir release-cli\
