@@ -811,6 +811,7 @@ namespace FragmentLab
 			const string COLUMN_PRECURSOR_ASSIGNED			= "Precursor assigned";
 			const string COLUMN_PERCENT_SPECTRUM_EXPLAINED	= "Percentage spectrum explained";
 			const string COLUMN_ENCYCLOPEDIA_SCORE			= "EncyclopeDIA score";
+			const string COLUMN_PRECURSOR_MASS				= "Precursor m/z";
 
 			// setup the CsvWriter
 			string filename = data.Filename;
@@ -859,6 +860,7 @@ namespace FragmentLab
 				writer.AddColumn(COLUMN_PRECURSOR_ASSIGNED,				typeof(bool));
 				writer.AddColumn(COLUMN_PERCENT_SPECTRUM_EXPLAINED,		typeof(double));
 				writer.AddColumn(COLUMN_ENCYCLOPEDIA_SCORE,				typeof(double));
+				writer.AddColumn(COLUMN_PRECURSOR_MASS,					typeof(double));
 
 				int numberpsms = 0;
 				foreach (PeptideSpectrumMatch psm in data.PsmList)
@@ -925,6 +927,7 @@ namespace FragmentLab
 					row[COLUMN_PRECURSOR_ASSIGNED]				= annotator.PrecursorAssigned;
 					row[COLUMN_PERCENT_SPECTRUM_EXPLAINED]		= annotator.AssignedIonLoad;
 					row[COLUMN_ENCYCLOPEDIA_SCORE]				= spectral_angle;
+					row[COLUMN_PRECURSOR_MASS]					= precursor.Mz;
 
 					writer.WriteRow(row);
 
