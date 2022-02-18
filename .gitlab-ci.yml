@@ -51,7 +51,8 @@ release_gitlab:
   dependencies:
     - build
   rules:
-    - if: '$CI_COMMIT_MESSAGE == "RELEASE" || $OVERRIDE_RELEASE == "true"'
+    - if: '$CI_COMMIT_MESSAGE == "RELEASE"'
+    - if: '$OVERRIDE_RELEASE'
 
 release_github:
   stage: release_github
@@ -69,4 +70,5 @@ release_github:
   dependencies:
     - build
   rules:
-    - if: '$CI_COMMIT_MESSAGE == "RELEASE" || $OVERRIDE_RELEASE == "true"'
+    - if: '$CI_COMMIT_MESSAGE == "RELEASE"'
+    - if: '$OVERRIDE_RELEASE'
