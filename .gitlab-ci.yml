@@ -58,7 +58,7 @@ release_github:
   - git remote set-url origin "https://$BASTIAAN_ACCESS@github.com/ScheltemaLab/FragmentLab"
   - git push origin $BUILD_VERSION
   - gh auth login
-  - gh release create $BUILD_VERSION -t $BUILD_VERSION -n $BUILD_VERSION'
+  - gh release create $BUILD_VERSION -t $BUILD_VERSION -n $BUILD_VERSION
   - gh release upload $BUILD_VERSION source/installer/bin/release/installer.msi
   artifacts:
     untracked: true
