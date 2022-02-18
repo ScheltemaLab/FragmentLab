@@ -46,7 +46,7 @@ release_gitlab:
   - $env:assetjson = $env:asset | ConvertTo-Json
   - release-cli --insecure-https=true create --name "$Env:BUILD_VERSION" --description "$Env:BUILD_VERSION:\n$Env:Message" --tag-name "$Env:BUILD_VERSION" --assets-link=$env:assetjson
   rules:
-    - if: '$CI_COMMIT_MESSAGE == "RELEASE"'
+    - if: '$CI_COMMIT_MESSAGE=~/^[^RELEASE]/'
     - if: '$OVERRIDE_RELEASE'
   artifacts:
     untracked: true
@@ -65,7 +65,7 @@ release_github:
   - gh release create $Env:BUILD_VERSION -t "$Env:BUILD_VERSION:\n$Env:Message" -n "$Env:BUILD_VERSION:\n$Env:Message"
   - gh release upload $Env:BUILD_VERSION source/installer/bin/release/installer.msi
   rules:
-    - if: '$CI_COMMIT_MESSAGE == "RELEASE"'
+    - if: '$CI_COMMIT_MESSAGE=~/^[^RELEASE]/'
     - if: '$OVERRIDE_RELEASE'
   artifacts:
     untracked: true
