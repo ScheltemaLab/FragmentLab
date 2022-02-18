@@ -17,6 +17,9 @@ stages:
   - release_github
 
 build:
+  except:
+  - merge_requests
+  - pipelines
   stage: build
   tags: [windows,csharp]
   script:
@@ -28,9 +31,6 @@ build:
     when: always
 
 release_gitlab:
-  except:
-  - merge_requests
-  - pipelines
   stage: release_gitlab
   tags: [windows,csharp]
   script:
@@ -57,9 +57,6 @@ release_gitlab:
 
 
 release_github:
-  except:
-  - merge_requests
-  - pipelines
   stage: release_github
   tags: [windows,csharp]
   script:
