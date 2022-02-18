@@ -9,6 +9,7 @@ workflow:
 
 before_script:
   - $Env:Path = [Environment]::GetEnvironmentVariable("Path", [EnvironmentVariableTarget]::Machine)
+  - $Env:Message = $MESSAGE
 
 stages:
   - build
@@ -19,10 +20,10 @@ build:
   stage: build
   tags: [windows,csharp]
   script:
-  - gh
   - '& CiScripts\Scripts\build.ps1'
   - '& $MSBUILD_FULL_PATH -p:configuration=release -t:restore -p:RestorePackagesConfig=true /p:RestoreSources=$NUGET_SOURCE'
   - '& $MSBUILD_FULL_PATH -p:configuration=release'
+  - $Env:BUILD_VERSION = (get-item -path .\source\fragmentlab\bin\anycpu\debug\net48\FragmentLab.exe).VersionInfo.ProductVersion
   artifacts:
     untracked: true
     when: always
@@ -31,38 +32,39 @@ release_gitlab:
   stage: release_gitlab
   tags: [windows,csharp]
   script:
-  - $BUILD_VERSION = (get-item -path .\source\fragmentlab\bin\anycpu\debug\net48\FragmentLab.exe).VersionInfo.ProductVersion
-  - Invoke-RestMethod -Headers @{ "JOB-TOKEN"="$CI_JOB_TOKEN"; "Content-Type"="multipart/form-data" } -InFile source/installer/bin/release/installer.msi -uri "https://bms-developer.science.uu.nl/api/v4/projects/99/packages/generic/FragmentLab/$BUILD_VERSION/installer.msi" -Method put
+  - Invoke-RestMethod -Headers @{ "JOB-TOKEN"="$CI_JOB_TOKEN"; "Content-Type"="multipart/form-data" } -InFile source/installer/bin/release/installer.msi -uri "https://bms-developer.science.uu.nl/api/v4/projects/99/packages/generic/FragmentLab/$Env:BUILD_VERSION/installer.msi" -Method put
   - git remote set-url origin git@bms-developer.science.uu.nl:csharp/shotgun/fragmentlab.git
-  - git tag -a "$BUILD_VERSION" -m $BUILD_VERSION
-  - git push origin $BUILD_VERSION
+  - git tag -a "$Env:BUILD_VERSION" -m "$Env:BUILD_VERSION:\n$Env:Message"
+  - git push origin $Env:BUILD_VERSION
   - mkdir release-cli
   - curl.exe -L https://release-cli-downloads.s3.amazonaws.com/latest/release-cli-windows-amd64.exe --output release-cli\release-cli.exe
   - $cliDir = (Get-Item .).FullName+"\release-cli\"
   - '$env:Path += ";$cliDir"'
-  - $env:asset = "{`"name`":`"Installer`",`"url`":`"https://bms-developer.science.uu.nl/api/v4/projects/99/packages/generic/FragmentLab/$BUILD_VERSION/installer.msi`"}"
+  - $env:asset = "{`"name`":`"Installer`",`"url`":`"https://bms-developer.science.uu.nl/api/v4/projects/99/packages/generic/FragmentLab/$Env:BUILD_VERSION/installer.msi`"}"
   - $env:assetjson = $env:asset | ConvertTo-Json
-  - release-cli --insecure-https=true create --name "Release $BUILD_VERSION" --description "Created using the release-cli $BUILD_VERSION" --tag-name "$BUILD_VERSION" --assets-link=$env:assetjson
-
+  - release-cli --insecure-https=true create --name "$Env:BUILD_VERSION" --description "$Env:BUILD_VERSION:\n$Env:Message" --tag-name "$Env:BUILD_VERSION" --assets-link=$env:assetjson
   artifacts:
     untracked: true
     when: always
   dependencies:
     - build
+  rules:
+    - if: '$CI_COMMIT_MESSAGE == "RELEASE" || $OVERRIDE_RELEASE
 
 release_github:
   stage: release_github
   tags: [windows,csharp]
   script:
-  - $BUILD_VERSION = (get-item -path .\source\fragmentlab\bin\anycpu\debug\net48\FragmentLab.exe).VersionInfo.ProductVersion
   - git remote set-url origin "https://$BASTIAAN_ACCESS@github.com/ScheltemaLab/FragmentLab"
-  - git push origin $BUILD_VERSION
+  - git push origin $Env:BUILD_VERSION
   - git push origin
   - gh auth login
-  - gh release create $BUILD_VERSION -t $BUILD_VERSION -n $BUILD_VERSION
-  - gh release upload $BUILD_VERSION source/installer/bin/release/installer.msi
+  - gh release create $Env:BUILD_VERSION -t "$Env:BUILD_VERSION:\n$Env:Message" -n "$Env:BUILD_VERSION:\n$Env:Message"
+  - gh release upload $Env:BUILD_VERSION source/installer/bin/release/installer.msi
   artifacts:
     untracked: true
     when: always
   dependencies:
     - build
+  rules:
+    - if: '$CI_COMMIT_MESSAGE == "RELEASE" || $OVERRIDE_RELEASE
