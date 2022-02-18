@@ -8,8 +8,8 @@ workflow:
 
 stages:
   - build
-  - deploy
-  - mirror
+  - release_gitlab
+  - release_github
 
 build:
   stage: build
@@ -49,7 +49,7 @@ release_gitlab:
     - build
 
 release_github:
-  stage: mirror
+  stage: release_github
   tags: [windows,csharp]
   script:
   - $VERSION = (get-item -path .\source\fragmentlab\bin\anycpu\debug\net48\FragmentLab.exe).VersionInfo.ProductVersion
