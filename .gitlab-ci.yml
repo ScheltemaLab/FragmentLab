@@ -21,6 +21,7 @@ build:
   stage: build
   tags: [windows,csharp]
   script:
+  - echo $CI_COMMIT_MESSAGE
   - '& CiScripts\Scripts\build.ps1'
   - '& $MSBUILD_FULL_PATH -p:configuration=release -t:restore -p:RestorePackagesConfig=true /p:RestoreSources=$NUGET_SOURCE'
   - '& $MSBUILD_FULL_PATH -p:configuration=release'
