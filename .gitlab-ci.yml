@@ -57,6 +57,7 @@ release_github:
   - $BUILD_VERSION = (get-item -path .\source\fragmentlab\bin\anycpu\debug\net48\FragmentLab.exe).VersionInfo.ProductVersion
   - git remote set-url origin "https://$BASTIAAN_ACCESS@github.com/ScheltemaLab/FragmentLab"
   - git push origin $BUILD_VERSION
+  - git push origin
   - gh auth login
   - gh release create $BUILD_VERSION -t $BUILD_VERSION -n $BUILD_VERSION
   - gh release upload $BUILD_VERSION source/installer/bin/release/installer.msi
