@@ -19,8 +19,6 @@ build:
   - '& $MSBUILD_FULL_PATH -p:configuration=release -t:restore -p:RestorePackagesConfig=true /p:RestoreSources=$NUGET_SOURCE'
   - '& $MSBUILD_FULL_PATH -p:configuration=release'
   artifacts:
-    reports:
-      dotenv: build.env
     untracked: true
     when: always
 
