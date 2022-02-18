@@ -37,12 +37,12 @@
 			- Bastiaan de Graaf
 			- Sem Tamara
 		</Description>
-		<Version>2.6.1.11</Version>
+		<Version>2.6.1.12</Version>
 		<PackageProjectUrl>https://scheltemalab.com</PackageProjectUrl>
-		<ApplicationVersion>2.6.1.11</ApplicationVersion>
-		<AssemblyVersion>2.6.1.11</AssemblyVersion>
+		<ApplicationVersion>2.6.1.12</ApplicationVersion>
+		<AssemblyVersion>2.6.1.12</AssemblyVersion>
 		<Authors>Richard Scheltema, Andris Jankevics, Henk van der Toorn, Bastiaan de Graaf, Sem Tamara</Authors>
-		<FileVersion>2.6.1.11</FileVersion>
+		<FileVersion>2.6.1.12</FileVersion>
 		<OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
 	</PropertyGroup>
 
