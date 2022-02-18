@@ -22,7 +22,6 @@ build:
   script:
   - '& $MSBUILD_FULL_PATH -p:configuration=release -t:restore -p:RestorePackagesConfig=true /p:RestoreSources=$NUGET_SOURCE'
   - '& $MSBUILD_FULL_PATH -p:configuration=release'
-  - $Env:BUILD_VERSION = (get-item -path .\source\fragmentlab\bin\anycpu\debug\net48\FragmentLab.exe).VersionInfo.ProductVersion
   artifacts:
     untracked: true
     when: always
@@ -31,6 +30,7 @@ release_gitlab:
   stage: release_gitlab
   tags: [windows,csharp]
   script:
+  - $Env:BUILD_VERSION = (get-item -path .\source\fragmentlab\bin\anycpu\debug\net48\FragmentLab.exe).VersionInfo.ProductVersion
   - Invoke-RestMethod -Headers @{ "JOB-TOKEN"="$CI_JOB_TOKEN"; "Content-Type"="multipart/form-data" } -InFile source/installer/bin/release/installer.msi -uri "https://bms-developer.science.uu.nl/api/v4/projects/99/packages/generic/FragmentLab/$Env:BUILD_VERSION/installer.msi" -Method put
   - git remote set-url origin git@bms-developer.science.uu.nl:csharp/shotgun/fragmentlab.git
   - git tag -a "$Env:BUILD_VERSION" -m "$Env:BUILD_VERSION:\n$Env:Message"
@@ -55,11 +55,12 @@ release_github:
   stage: release_github
   tags: [windows,csharp]
   script:
+  - $Env:BUILD_VERSION = (get-item -path .\source\fragmentlab\bin\anycpu\debug\net48\FragmentLab.exe).VersionInfo.ProductVersion
   - git remote set-url origin "https://$BASTIAAN_ACCESS@github.com/ScheltemaLab/FragmentLab"
   - git push origin $Env:BUILD_VERSION
   - git push origin
   - gh auth login
-  - gh release create $Env:BUILD_VERSION -t "$Env:BUILD_VERSION:\n$Env:Message" -n "$Env:BUILD_VERSION:\n$Env:Message"
+  - gh release create $Env:BUILD_VERSION -t "$Env:BUILD_VERSION $Env:Message" -n "$Env:BUILD_VERSION:\n$Env:Message"
   - gh release upload $Env:BUILD_VERSION source/installer/bin/release/installer.msi
   rules:
     - if: '$CI_COMMIT_MESSAGE=~/^RELEASE/'
