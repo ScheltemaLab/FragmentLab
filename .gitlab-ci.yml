@@ -19,7 +19,7 @@ build:
   - '& $MSBUILD_FULL_PATH -p:configuration=release -t:restore -p:RestorePackagesConfig=true /p:RestoreSources=$NUGET_SOURCE'
   - '& $MSBUILD_FULL_PATH -p:configuration=release'
   - $VERSION = (get-item -path .\source\fragmentlab\bin\anycpu\debug\net48\FragmentLab.exe).VersionInfo.ProductVersion
-  - echo "BUILD_VERSION=$VERSION" > build.env
+  - echo "BUILD_VERSION=$VERSION" >> build.env
   artifacts:
     reports:
       dotenv: build.env
