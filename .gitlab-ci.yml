@@ -68,5 +68,5 @@ release_github:
   dependencies:
     - build
   rules:
-    - if: '$CI_COMMIT_MESSAGE == "RELEASE"'
+    - if: '$CI_COMMIT_MESSAGE == RELEASE'
     - if: '$OVERRIDE_RELEASE'
