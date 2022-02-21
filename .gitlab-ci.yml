@@ -65,8 +65,8 @@ release_github:
   - git push origin $Env:BUILD_VERSION
   - git push origin HEAD:master
   - gh release create $Env:BUILD_VERSION -t "$Env:BUILD_VERSION $Env:Message" -n "$Env:BUILD_VERSION:\n$Env:Message"
-  - gh release upload $Env:BUILD_VERSION source/fragmentlab/bin/release/installer.msi
-  - gh release upload $Env:BUILD_VERSION (dir source/installer/bin/anycpu/release/hecklib*dll)
+  - gh release upload $Env:BUILD_VERSION source/installer/bin/release/installer.msi
+  - gh release upload $Env:BUILD_VERSION (dir source/FragmentLab/bin/anycpu/release/hecklib*dll)
   rules:
     - if: '$CI_COMMIT_MESSAGE=~/^RELEASE/'
     - if: '$OVERRIDE_RELEASE'
