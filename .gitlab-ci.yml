@@ -63,8 +63,7 @@ release_github:
   - $Env:BUILD_VERSION = (get-item -path .\source\fragmentlab\bin\anycpu\release\net48\FragmentLab.exe).VersionInfo.ProductVersion
   - git remote set-url origin "https://$BASTIAAN_ACCESS@github.com/ScheltemaLab/FragmentLab"
   - git push origin $Env:BUILD_VERSION
-  - git push origin
-  - gh auth login
+  - git push origin HEAD:master
   - gh release create $Env:BUILD_VERSION -t "$Env:BUILD_VERSION $Env:Message" -n "$Env:BUILD_VERSION:\n$Env:Message"
   - gh release upload $Env:BUILD_VERSION (dir source/installer/bin/release/hecklib*dll)
   rules:
