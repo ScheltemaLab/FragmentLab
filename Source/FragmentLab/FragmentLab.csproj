@@ -37,7 +37,7 @@
 			- Bastiaan de Graaf
 			- Sem Tamara
 		</Description>
-		<Version>2.6.1.24</Version>
+		<Version>2.6.1.25</Version>
 		<PackageProjectUrl>https://scheltemalab.com</PackageProjectUrl>
 		<Authors>Richard Scheltema, Andris Jankevics, Henk van der Toorn, Bastiaan de Graaf, Sem Tamara</Authors>
 		<OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
